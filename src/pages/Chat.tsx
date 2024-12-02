@@ -53,6 +53,11 @@ const Chat = () => {
     }
   };
 
+  const preventImageCopy = (e: React.MouseEvent) => {
+    e.preventDefault();
+    console.log("Tentative de copie d'image bloquée");
+  };
+
   return (
     <div className="flex h-screen bg-background">
       {/* Sidebar */}
@@ -99,7 +104,10 @@ const Chat = () => {
                     <img
                       src={message.image}
                       alt="Shared"
-                      className="rounded-lg mb-2 max-w-xs"
+                      className="rounded-lg mb-2 max-w-xs select-none"
+                      onContextMenu={preventImageCopy}
+                      draggable="false"
+                      style={{ WebkitUserSelect: 'none', userSelect: 'none' }}
                     />
                   )}
                   <p>{message.content}</p>
