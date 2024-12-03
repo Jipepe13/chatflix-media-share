@@ -5,7 +5,7 @@ declare global {
     global: typeof globalThis;
     process: { env: Record<string, string> };
     Buffer: {
-      isBuffer: (obj: any) => boolean;
+      isBuffer: (obj: any) => obj is Buffer;
       from: (data: any) => any;
     };
   }

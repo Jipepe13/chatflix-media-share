@@ -6,13 +6,16 @@ if (typeof window !== 'undefined') {
 
 // Additional Node.js globals that might be needed
 if (typeof process === 'undefined') {
-  window.process = { env: {} };
+  // Using a minimal process object with just the required env property
+  (window as any).process = {
+    env: {} as Record<string, string>
+  };
 }
 
 // Buffer polyfill if needed
 if (typeof window.Buffer === 'undefined') {
-  window.Buffer = {
-    isBuffer: () => false,
+  (window as any).Buffer = {
+    isBuffer: (obj: any): obj is Buffer => false,
     from: (data: any) => data,
   };
 }
