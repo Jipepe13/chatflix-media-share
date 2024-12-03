@@ -5,6 +5,9 @@ import { MessageBubble } from "@/components/chat/MessageBubble";
 import { MessageInput } from "@/components/chat/MessageInput";
 import { Message, User } from "@/types/chat";
 import { useToast } from "@/components/ui/use-toast";
+import { VideoCall } from "@/components/chat/VideoCall";
+import { Button } from "@/components/ui/button";
+import { Video } from "lucide-react";
 
 const Chat = () => {
   const [messages, setMessages] = useState<Message[]>([
@@ -24,6 +27,7 @@ const Chat = () => {
   const [newMessage, setNewMessage] = useState("");
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [isInCall, setIsInCall] = useState(false);
   const { toast } = useToast();
 
   const handleSendMessage = (e: React.FormEvent) => {
@@ -57,6 +61,18 @@ const Chat = () => {
     }
   };
 
+  const startVideoCall = () => {
+    if (!selectedUser) {
+      toast({
+        title: "Impossible de démarrer l'appel",
+        description: "Veuillez sélectionner un utilisateur pour démarrer un appel vidéo",
+        variant: "destructive",
+      });
+      return;
+    }
+    setIsInCall(true);
+  };
+
   const filteredMessages = messages.filter(
     (message) =>
       !message.isPrivate ||
@@ -69,10 +85,21 @@ const Chat = () => {
     <div className="flex h-screen bg-background">
       <ChatSidebar selectedUser={selectedUser} onSelectUser={setSelectedUser} />
       <div className="flex-1 flex flex-col">
-        <div className="border-b p-4">
+        <div className="border-b p-4 flex justify-between items-center">
           <h1 className="font-semibold">
             {selectedUser ? `Chat Privé avec ${selectedUser.username}` : "Chat Public"}
           </h1>
+          {selectedUser && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={startVideoCall}
+              className="flex items-center gap-2"
+            >
+              <Video className="h-4 w-4" />
+              Appel vidéo
+            </Button>
+          )}
         </div>
 
         <ScrollArea className="flex-1 p-4">
@@ -90,6 +117,14 @@ const Chat = () => {
           handleImageSelect={handleImageSelect}
         />
       </div>
+
+      {isInCall && selectedUser && (
+        <VideoCall
+          isInitiator={true}
+          userId={selectedUser.username}
+          onClose={() => setIsInCall(false)}
+        />
+      )}
     </div>
   );
 };
