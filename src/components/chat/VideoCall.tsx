@@ -19,48 +19,72 @@ export const VideoCall = ({ isInitiator, userId, onClose }: VideoCallProps) => {
   const peerRef = useRef<Peer.Instance | null>(null);
 
   useEffect(() => {
+    console.log("Initializing video call...");
     const startCall = async () => {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({
+        console.log("Requesting media devices...");
+        const userMedia = await navigator.mediaDevices.getUserMedia({
           video: true,
           audio: true,
         });
-        setStream(stream);
+        console.log("Media devices acquired successfully");
+        setStream(userMedia);
+        
         if (myVideo.current) {
-          myVideo.current.srcObject = stream;
+          myVideo.current.srcObject = userMedia;
         }
 
-        const peer = new Peer({
+        const peerOptions = {
           initiator: isInitiator,
           trickle: false,
-          stream,
-        });
+          stream: userMedia,
+          config: {
+            iceServers: [
+              { urls: 'stun:stun.l.google.com:19302' },
+              { urls: 'stun:global.stun.twilio.com:3478' }
+            ]
+          }
+        };
+
+        console.log("Creating peer with options:", peerOptions);
+        const peer = new Peer(peerOptions);
 
         peer.on("signal", (data) => {
-          // Ici, vous devriez envoyer le signal au serveur
-          console.log("Signal généré:", data);
+          console.log("Signal generated:", data);
+          // Here you would send the signal to the other peer through your signaling server
         });
 
         peer.on("stream", (remoteStream) => {
+          console.log("Received remote stream");
           if (peerVideo.current) {
             peerVideo.current.srcObject = remoteStream;
           }
         });
 
+        peer.on("error", (err) => {
+          console.error("Peer error:", err);
+          toast({
+            title: "Erreur de connexion",
+            description: "Une erreur est survenue lors de l'appel vidéo",
+            variant: "destructive",
+          });
+        });
+
         peerRef.current = peer;
       } catch (err) {
+        console.error("Error accessing media devices:", err);
         toast({
           title: "Erreur",
           description: "Impossible d'accéder à la caméra ou au microphone",
           variant: "destructive",
         });
-        console.error("Erreur d'accès aux périphériques:", err);
       }
     };
 
     startCall();
 
     return () => {
+      console.log("Cleaning up video call...");
       if (stream) {
         stream.getTracks().forEach((track) => track.stop());
       }
