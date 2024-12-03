@@ -1,7 +1,18 @@
 // Polyfill for packages that expect the Node.js global object
-if (typeof global === 'undefined') {
-  (window as any).global = window;
-  (window as any).global.global = window;
-  (window as any).global.window = window;
-  (window as any).global.self = window;
+if (typeof window !== 'undefined') {
+  window.global = window;
+  global = window;
+}
+
+// Additional Node.js globals that might be needed
+if (typeof process === 'undefined') {
+  window.process = { env: {} };
+}
+
+// Buffer polyfill if needed
+if (typeof window.Buffer === 'undefined') {
+  window.Buffer = {
+    isBuffer: () => false,
+    from: (data: any) => data,
+  };
 }
