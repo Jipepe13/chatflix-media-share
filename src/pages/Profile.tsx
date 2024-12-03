@@ -3,11 +3,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 const Profile = () => {
   const [username, setUsername] = useState("User123");
   const [bio, setBio] = useState("");
   const [avatar, setAvatar] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -15,9 +18,15 @@ const Profile = () => {
       const reader = new FileReader();
       reader.onloadend = () => {
         setAvatar(reader.result as string);
+        toast.success("Avatar mis à jour !");
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  const handleSaveProfile = () => {
+    // Simulation de sauvegarde (à remplacer par Supabase)
+    toast.success("Profil mis à jour avec succès !");
   };
 
   return (
@@ -26,7 +35,7 @@ const Profile = () => {
         <Card className="glass-panel animate-in">
           <CardHeader>
             <CardTitle className="text-2xl font-semibold text-center">
-              Profil
+              Mon Profil
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -80,7 +89,18 @@ const Profile = () => {
                 />
               </div>
 
-              <Button className="w-full">Sauvegarder</Button>
+              <div className="flex space-x-4">
+                <Button onClick={handleSaveProfile} className="flex-1">
+                  Sauvegarder
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => navigate("/chat")}
+                  className="flex-1"
+                >
+                  Aller au Chat
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>

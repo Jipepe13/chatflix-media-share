@@ -5,3 +5,10 @@ export interface Message {
   timestamp: Date;
   image?: string;
 }
+
+export interface User {
+  id: string;
+  username: string;
+  avatar?: string;
+  isOnline: boolean;
+}
