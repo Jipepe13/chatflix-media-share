@@ -1,5 +1,6 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { User } from "@/types/chat";
+import { cn } from "@/lib/utils";
 
 const mockUsers: User[] = [
   { id: "1", username: "Alice", isOnline: true },
@@ -7,15 +8,33 @@ const mockUsers: User[] = [
   { id: "3", username: "Charlie", isOnline: true },
 ];
 
-export const ChatSidebar = () => {
+interface ChatSidebarProps {
+  selectedUser?: User | null;
+  onSelectUser: (user: User | null) => void;
+}
+
+export const ChatSidebar = ({ selectedUser, onSelectUser }: ChatSidebarProps) => {
   return (
     <div className="w-64 border-r bg-card p-4 hidden md:block">
       <h2 className="font-semibold mb-4">Conversations</h2>
       <div className="space-y-2">
+        <div 
+          className={cn(
+            "flex items-center space-x-3 p-2 rounded-lg hover:bg-muted cursor-pointer",
+            !selectedUser && "bg-muted"
+          )}
+          onClick={() => onSelectUser(null)}
+        >
+          <span>Chat Public</span>
+        </div>
         {mockUsers.map((user) => (
           <div
             key={user.id}
-            className="flex items-center space-x-3 p-2 rounded-lg hover:bg-muted cursor-pointer"
+            className={cn(
+              "flex items-center space-x-3 p-2 rounded-lg hover:bg-muted cursor-pointer",
+              selectedUser?.id === user.id && "bg-muted"
+            )}
+            onClick={() => onSelectUser(user)}
           >
             <div className="relative">
               <Avatar>

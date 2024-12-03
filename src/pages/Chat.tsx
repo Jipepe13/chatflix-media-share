@@ -3,7 +3,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { ChatSidebar } from "@/components/chat/ChatSidebar";
 import { MessageBubble } from "@/components/chat/MessageBubble";
 import { MessageInput } from "@/components/chat/MessageInput";
-import { Message } from "@/types/chat";
+import { Message, User } from "@/types/chat";
+import { useToast } from "@/components/ui/use-toast";
 
 const Chat = () => {
   const [messages, setMessages] = useState<Message[]>([
@@ -22,6 +23,8 @@ const Chat = () => {
   ]);
   const [newMessage, setNewMessage] = useState("");
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const { toast } = useToast();
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,10 +35,19 @@ const Chat = () => {
         sender: "currentUser",
         timestamp: new Date(),
         image: selectedImage ? URL.createObjectURL(selectedImage) : undefined,
+        isPrivate: !!selectedUser,
+        recipient: selectedUser?.id,
       };
       setMessages([...messages, message]);
       setNewMessage("");
       setSelectedImage(null);
+
+      if (selectedUser) {
+        toast({
+          title: "Message privé envoyé",
+          description: `Message envoyé à ${selectedUser.username}`,
+        });
+      }
     }
   };
 
@@ -45,17 +57,27 @@ const Chat = () => {
     }
   };
 
+  const filteredMessages = messages.filter(
+    (message) =>
+      !message.isPrivate ||
+      (message.isPrivate &&
+        ((message.sender === "currentUser" && message.recipient === selectedUser?.id) ||
+          (message.sender === selectedUser?.id && message.recipient === "currentUser")))
+  );
+
   return (
     <div className="flex h-screen bg-background">
-      <ChatSidebar />
+      <ChatSidebar selectedUser={selectedUser} onSelectUser={setSelectedUser} />
       <div className="flex-1 flex flex-col">
         <div className="border-b p-4">
-          <h1 className="font-semibold">Chat Public</h1>
+          <h1 className="font-semibold">
+            {selectedUser ? `Chat Privé avec ${selectedUser.username}` : "Chat Public"}
+          </h1>
         </div>
 
         <ScrollArea className="flex-1 p-4">
           <div className="space-y-4">
-            {messages.map((message) => (
+            {filteredMessages.map((message) => (
               <MessageBubble key={message.id} message={message} />
             ))}
           </div>

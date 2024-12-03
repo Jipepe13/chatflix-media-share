@@ -2,6 +2,8 @@ export interface Message {
   id: string;
   content: string;
   sender: string;
+  recipient?: string;
+  isPrivate?: boolean;
   timestamp: Date;
   image?: string;
 }
