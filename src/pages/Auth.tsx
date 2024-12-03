@@ -30,10 +30,10 @@ const Auth = () => {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-b from-background to-muted">
       <div className="w-full max-w-md space-y-8">
-        <div className="text-center space-y-2">
+        <div className="text-center space-y-2 animate-fade-in">
           <div className="flex justify-center space-x-2 mb-4">
-            <MessageCircle className="w-8 h-8 text-primary" />
-            <Camera className="w-8 h-8 text-primary" />
+            <MessageCircle className="w-8 h-8 text-primary animate-bounce" />
+            <Camera className="w-8 h-8 text-primary animate-pulse" />
           </div>
           <h1 className="text-4xl font-bold tracking-tight mb-2">PhotoChat</h1>
           <p className="text-muted-foreground">
@@ -41,7 +41,7 @@ const Auth = () => {
           </p>
         </div>
 
-        <Card className="w-full glass-panel animate-in">
+        <Card className="w-full animate-scale-in shadow-lg hover:shadow-xl transition-shadow duration-300">
           <CardHeader>
             <CardTitle className="text-2xl font-semibold text-center">
               {isLogin ? "Connexion" : "Inscription"}
@@ -66,7 +66,7 @@ const Auth = () => {
                     onChange={(e) => setUsername(e.target.value)}
                     required
                     placeholder="JohnDoe"
-                    className="w-full"
+                    className="transition-all duration-200 focus:scale-[1.01]"
                   />
                 </div>
               )}
@@ -81,7 +81,7 @@ const Auth = () => {
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   placeholder="john@example.com"
-                  className="w-full"
+                  className="transition-all duration-200 focus:scale-[1.01]"
                 />
               </div>
               <div className="space-y-2">
@@ -96,12 +96,12 @@ const Auth = () => {
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     placeholder="••••••••"
-                    className="w-full pr-10"
+                    className="pr-10 transition-all duration-200 focus:scale-[1.01]"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                   >
                     {showPassword ? (
                       <EyeOff className="h-4 w-4" />
@@ -113,14 +113,14 @@ const Auth = () => {
               </div>
             </CardContent>
             <CardFooter className="flex flex-col space-y-4">
-              <Button type="submit" className="w-full">
+              <Button type="submit" className="w-full hover:scale-[1.02] transition-transform">
                 {isLogin ? "Se connecter" : "S'inscrire"}
               </Button>
               <Button
                 type="button"
                 variant="ghost"
                 onClick={() => setIsLogin(!isLogin)}
-                className="w-full"
+                className="w-full hover:bg-muted/50 transition-colors"
               >
                 {isLogin
                   ? "Pas encore de compte ? S'inscrire"
