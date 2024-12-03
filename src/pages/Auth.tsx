@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, MessageCircle, Camera } from "lucide-react";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -18,7 +18,6 @@ const Auth = () => {
     e.preventDefault();
     
     try {
-      // Simulation d'authentification (à remplacer par Supabase)
       console.log("Auth submitted:", { email, password, username });
       toast.success(isLogin ? "Connexion réussie !" : "Inscription réussie !");
       navigate("/chat");
@@ -31,10 +30,14 @@ const Auth = () => {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-b from-background to-muted">
       <div className="w-full max-w-md space-y-8">
-        <div className="text-center">
+        <div className="text-center space-y-2">
+          <div className="flex justify-center space-x-2 mb-4">
+            <MessageCircle className="w-8 h-8 text-primary" />
+            <Camera className="w-8 h-8 text-primary" />
+          </div>
           <h1 className="text-4xl font-bold tracking-tight mb-2">PhotoChat</h1>
           <p className="text-muted-foreground">
-            Partagez vos moments, chattez en direct
+            Bienvenue sur PhotoChat ! Partagez vos moments préférés et chattez en direct.
           </p>
         </div>
 
@@ -45,8 +48,8 @@ const Auth = () => {
             </CardTitle>
             <CardDescription className="text-center">
               {isLogin
-                ? "Connectez-vous à votre compte"
-                : "Créez votre compte pour commencer"}
+                ? "Heureux de vous revoir ! Connectez-vous à votre compte"
+                : "Rejoignez notre communauté en créant votre compte"}
             </CardDescription>
           </CardHeader>
           <form onSubmit={handleSubmit}>
