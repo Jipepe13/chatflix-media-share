@@ -92,15 +92,15 @@ const Chat = () => {
   );
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex h-screen bg-background chat-background">
       <ChatSidebar 
         selectedUser={selectedUser} 
         onSelectUser={setSelectedUser}
         selectedChannel={selectedChannel}
-        onSelectChannel={setSelectedChannel}
+        onSelectChannel={setSelectChannel}
       />
-      <div className="flex-1 flex flex-col">
-        <div className="border-b p-4 flex justify-between items-center">
+      <div className="flex-1 flex flex-col bg-white/80 backdrop-blur-sm">
+        <div className="border-b p-4 flex justify-between items-center bg-white/90">
           <h1 className="font-semibold flex items-center gap-2">
             {selectedChannel ? (
               <>
