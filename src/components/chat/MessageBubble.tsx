@@ -19,12 +19,17 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
           message.isPrivate && "border-2 border-primary/20"
         )}
       >
-        {message.isPrivate && (
-          <div className="flex items-center gap-1 text-xs text-muted-foreground mb-1">
-            <MessageCircle className="w-3 h-3" />
-            <span>Message Privé</span>
-          </div>
-        )}
+        <div className="flex items-center gap-2 mb-1">
+          <span className="text-sm font-medium text-muted-foreground">
+            {isCurrentUser ? "Vous" : message.sender}
+          </span>
+          {message.isPrivate && (
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <MessageCircle className="w-3 h-3" />
+              <span>Message Privé</span>
+            </div>
+          )}
+        </div>
         {message.image && (
           <div className="relative">
             <img
