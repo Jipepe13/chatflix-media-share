@@ -20,6 +20,7 @@ const App = () => (
           <Route path="/auth" element={<Auth />} />
           <Route path="/chat" element={<Chat />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/profile/:userId" element={<Profile />} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>

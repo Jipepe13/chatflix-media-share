@@ -3,9 +3,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { User, Channel } from "@/types/chat";
 import { cn } from "@/lib/utils";
-import { Plus, Hash, MessageCircle } from "lucide-react";
+import { Plus, Hash } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
+import { UserProfileCard } from "./UserProfileCard";
 
 const mockUsers: User[] = [
   { id: "1", username: "Alice", isOnline: true },
@@ -104,28 +105,29 @@ export const ChatSidebar = ({
         <div className="space-y-2">
           <h2 className="font-semibold">Messages Privés</h2>
           {mockUsers.map((user) => (
-            <div
-              key={user.id}
-              className={cn(
-                "flex items-center space-x-3 p-2 rounded-lg hover:bg-muted cursor-pointer",
-                selectedUser?.id === user.id && "bg-muted"
-              )}
-              onClick={() => {
-                onSelectUser(user);
-                onSelectChannel(null);
-              }}
-            >
-              <div className="relative">
-                <Avatar>
-                  <AvatarImage src={user.avatar} />
-                  <AvatarFallback>{user.username[0]}</AvatarFallback>
-                </Avatar>
-                {user.isOnline && (
-                  <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-background" />
+            <UserProfileCard key={user.id} user={user}>
+              <div
+                className={cn(
+                  "flex items-center space-x-3 p-2 rounded-lg hover:bg-muted cursor-pointer",
+                  selectedUser?.id === user.id && "bg-muted"
                 )}
+                onClick={() => {
+                  onSelectUser(user);
+                  onSelectChannel(null);
+                }}
+              >
+                <div className="relative">
+                  <Avatar>
+                    <AvatarImage src={user.avatar} />
+                    <AvatarFallback>{user.username[0]}</AvatarFallback>
+                  </Avatar>
+                  {user.isOnline && (
+                    <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-background" />
+                  )}
+                </div>
+                <span>{user.username}</span>
               </div>
-              <span>{user.username}</span>
-            </div>
+            </UserProfileCard>
           ))}
         </div>
       </div>
