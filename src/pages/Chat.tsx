@@ -3,11 +3,11 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { ChatSidebar } from "@/components/chat/ChatSidebar";
 import { MessageBubble } from "@/components/chat/MessageBubble";
 import { MessageInput } from "@/components/chat/MessageInput";
-import { Message, User } from "@/types/chat";
+import { Message, User, Channel } from "@/types/chat";
 import { useToast } from "@/components/ui/use-toast";
 import { VideoCall } from "@/components/chat/VideoCall";
 import { Button } from "@/components/ui/button";
-import { Video } from "lucide-react";
+import { Video, Hash } from "lucide-react";
 
 const Chat = () => {
   const [messages, setMessages] = useState<Message[]>([
@@ -16,17 +16,25 @@ const Chat = () => {
       content: "Bonjour ! Comment ça va ?",
       sender: "user1",
       timestamp: new Date(),
+      channelId: "1"
     },
     {
       id: "2",
       content: "Très bien, merci ! Et toi ?",
       sender: "currentUser",
       timestamp: new Date(),
+      channelId: "1"
     },
   ]);
   const [newMessage, setNewMessage] = useState("");
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [selectedChannel, setSelectedChannel] = useState<Channel | null>({
+    id: "1",
+    name: "général",
+    createdAt: new Date(),
+    createdBy: "system"
+  });
   const [isInCall, setIsInCall] = useState(false);
   const { toast } = useToast();
 
@@ -41,6 +49,7 @@ const Chat = () => {
         image: selectedImage ? URL.createObjectURL(selectedImage) : undefined,
         isPrivate: !!selectedUser,
         recipient: selectedUser?.id,
+        channelId: selectedChannel?.id
       };
       setMessages([...messages, message]);
       setNewMessage("");
@@ -75,19 +84,32 @@ const Chat = () => {
 
   const filteredMessages = messages.filter(
     (message) =>
-      !message.isPrivate ||
-      (message.isPrivate &&
+      (selectedChannel && message.channelId === selectedChannel.id) ||
+      (!selectedChannel &&
+        message.isPrivate &&
         ((message.sender === "currentUser" && message.recipient === selectedUser?.id) ||
           (message.sender === selectedUser?.id && message.recipient === "currentUser")))
   );
 
   return (
     <div className="flex h-screen bg-background">
-      <ChatSidebar selectedUser={selectedUser} onSelectUser={setSelectedUser} />
+      <ChatSidebar 
+        selectedUser={selectedUser} 
+        onSelectUser={setSelectedUser}
+        selectedChannel={selectedChannel}
+        onSelectChannel={setSelectedChannel}
+      />
       <div className="flex-1 flex flex-col">
         <div className="border-b p-4 flex justify-between items-center">
-          <h1 className="font-semibold">
-            {selectedUser ? `Chat Privé avec ${selectedUser.username}` : "Chat Public"}
+          <h1 className="font-semibold flex items-center gap-2">
+            {selectedChannel ? (
+              <>
+                <Hash className="h-5 w-5" />
+                {selectedChannel.name}
+              </>
+            ) : (
+              `Chat Privé avec ${selectedUser?.username}`
+            )}
           </h1>
           {selectedUser && (
             <Button

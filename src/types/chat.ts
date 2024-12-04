@@ -6,6 +6,7 @@ export interface Message {
   isPrivate?: boolean;
   timestamp: Date;
   image?: string;
+  channelId?: string;
 }
 
 export interface User {
@@ -13,4 +14,12 @@ export interface User {
   username: string;
   avatar?: string;
   isOnline: boolean;
+}
+
+export interface Channel {
+  id: string;
+  name: string;
+  description?: string;
+  createdBy?: string;
+  createdAt: Date;
 }
