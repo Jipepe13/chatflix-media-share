@@ -41,7 +41,7 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
               style={{ WebkitUserSelect: "none", userSelect: "none" }}
             />
             <div className="absolute bottom-3 right-3 text-white text-sm bg-black/50 px-2 py-1 rounded">
-              @{message.sender}
+              {message.sender}
             </div>
           </div>
         )}
