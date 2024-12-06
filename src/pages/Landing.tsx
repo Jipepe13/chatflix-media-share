@@ -49,7 +49,7 @@ const Landing = () => {
             </CardHeader>
             <CardContent>
               <img
-                src="https://images.unsplash.com/photo-1605810230434-7631ac76ec81"
+                src="https://images.unsplash.com/photo-1519389950473-47ba0277781c"
                 alt="Chat Feature"
                 className="rounded-lg w-full h-48 object-cover"
               />
@@ -87,7 +87,6 @@ const Landing = () => {
               />
             </CardContent>
           </Card>
-
         </div>
 
         {/* Features List */}
