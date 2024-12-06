@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Auth from "./pages/Auth";
 import Chat from "./pages/Chat";
 import Profile from "./pages/Profile";
+import Landing from "./pages/Landing";
 
 const queryClient = new QueryClient();
 
@@ -16,7 +17,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Navigate to="/auth" replace />} />
+          <Route path="/" element={<Landing />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/chat" element={<Chat />} />
           <Route path="/profile" element={<Profile />} />
