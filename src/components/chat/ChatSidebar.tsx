@@ -56,29 +56,30 @@ export const ChatSidebar = ({
   };
 
   return (
-    <div className="w-64 border-r bg-card p-4 hidden md:block">
-      <div className="space-y-4">
-        <div className="space-y-2">
+    <div className="w-64 border-r bg-card p-2 hidden md:block">
+      <div className="space-y-2">
+        <div className="space-y-1">
           <div className="flex items-center justify-between">
-            <h2 className="font-semibold">Salons</h2>
+            <h2 className="font-semibold text-xs">Salons</h2>
             <Button
               variant="ghost"
               size="icon"
+              className="h-6 w-6"
               onClick={() => setIsCreatingChannel(true)}
             >
-              <Plus className="h-4 w-4" />
+              <Plus className="h-3 w-3" />
             </Button>
           </div>
           
           {isCreatingChannel && (
-            <div className="flex gap-2">
+            <div className="flex gap-1">
               <Input
                 value={newChannelName}
                 onChange={(e) => setNewChannelName(e.target.value)}
                 placeholder="nom-du-salon"
-                className="text-sm"
+                className="text-xs h-6"
               />
-              <Button size="sm" onClick={handleCreateChannel}>
+              <Button size="sm" className="h-6 text-xs px-2" onClick={handleCreateChannel}>
                 Créer
               </Button>
             </div>
@@ -88,7 +89,7 @@ export const ChatSidebar = ({
             <div
               key={channel.id}
               className={cn(
-                "flex items-center space-x-2 p-2 rounded-lg hover:bg-muted cursor-pointer",
+                "flex items-center space-x-1 p-1 rounded-lg hover:bg-muted cursor-pointer text-xs",
                 selectedChannel?.id === channel.id && "bg-muted"
               )}
               onClick={() => {
@@ -96,19 +97,19 @@ export const ChatSidebar = ({
                 onSelectUser(null);
               }}
             >
-              <Hash className="h-4 w-4" />
+              <Hash className="h-3 w-3" />
               <span>{channel.name}</span>
             </div>
           ))}
         </div>
 
-        <div className="space-y-2">
-          <h2 className="font-semibold">Messages Privés</h2>
+        <div className="space-y-1">
+          <h2 className="font-semibold text-xs">Messages Privés</h2>
           {mockUsers.map((user) => (
             <UserProfileCard key={user.id} user={user}>
               <div
                 className={cn(
-                  "flex items-center space-x-3 p-2 rounded-lg hover:bg-muted cursor-pointer",
+                  "flex items-center space-x-2 p-1 rounded-lg hover:bg-muted cursor-pointer",
                   selectedUser?.id === user.id && "bg-muted"
                 )}
                 onClick={() => {
@@ -117,15 +118,15 @@ export const ChatSidebar = ({
                 }}
               >
                 <div className="relative">
-                  <Avatar>
+                  <Avatar className="h-5 w-5">
                     <AvatarImage src={user.avatar} />
-                    <AvatarFallback>{user.username[0]}</AvatarFallback>
+                    <AvatarFallback className="text-[10px]">{user.username[0]}</AvatarFallback>
                   </Avatar>
                   {user.isOnline && (
-                    <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-background" />
+                    <span className="absolute bottom-0 right-0 w-2 h-2 bg-green-500 rounded-full border-[1px] border-background" />
                   )}
                 </div>
-                <span>{user.username}</span>
+                <span className="text-xs truncate">{user.username}</span>
               </div>
             </UserProfileCard>
           ))}
