@@ -11,7 +11,7 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
   const isCurrentUser = message.sender === "currentUser";
   
   return (
-    <div className={`flex ${isCurrentUser ? "justify-end" : "justify-start"}`}>
+    <div className={`flex ${isCurrentUser ? "justify-end" : "justify-start"} mb-2`}>
       <div
         className={cn(
           "message-bubble",
@@ -19,23 +19,24 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
           message.isPrivate && "border-2 border-primary/20"
         )}
       >
-        <div className="flex items-center gap-2 mb-1">
-          <span className="text-sm font-medium text-muted-foreground">
-            {isCurrentUser ? "Vous" : message.sender}
+        <div className="flex items-center gap-1">
+          <span className="text-sm font-medium">
+            {isCurrentUser ? "Vous" : message.sender}:
           </span>
           {message.isPrivate && (
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
               <MessageCircle className="w-3 h-3" />
-              <span>Message Privé</span>
+              <span>MP</span>
             </div>
           )}
         </div>
+        
         {message.image && (
-          <div className="relative">
+          <div className="relative mt-1">
             <img
               src={message.image}
               alt="Shared"
-              className="rounded-lg mb-2 max-w-xs select-none"
+              className="rounded-lg max-w-xs select-none"
               onContextMenu={preventImageCopy}
               draggable="false"
               style={{ WebkitUserSelect: "none", userSelect: "none" }}
@@ -45,8 +46,10 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
             </div>
           </div>
         )}
-        <p>{message.content}</p>
-        <span className="text-xs opacity-50">
+        
+        <p className="mt-1">{message.content}</p>
+        
+        <span className="text-xs opacity-50 mt-1">
           {message.timestamp.toLocaleTimeString()}
         </span>
       </div>
