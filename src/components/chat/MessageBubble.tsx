@@ -11,16 +11,10 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
   const isCurrentUser = message.sender === "currentUser";
   
   return (
-    <div className={`flex ${isCurrentUser ? "justify-end" : "justify-start"} mb-2`}>
-      <div
-        className={cn(
-          "message-bubble",
-          isCurrentUser ? "message-bubble-sent" : "message-bubble-received",
-          message.isPrivate && "border-2 border-primary/20"
-        )}
-      >
+    <div className={`flex ${isCurrentUser ? "justify-end" : "justify-start"} py-1 px-2 hover:bg-secondary/50`}>
+      <div className="text-xs space-y-1">
         <div className="flex items-center gap-1">
-          <span className="text-sm font-medium">
+          <span className="font-medium">
             {isCurrentUser ? "Vous" : message.sender}:
           </span>
           {message.isPrivate && (
@@ -32,7 +26,7 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
         </div>
         
         {message.image && (
-          <div className="relative mt-1">
+          <div className="relative">
             <img
               src={message.image}
               alt="Shared"
@@ -47,9 +41,9 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
           </div>
         )}
         
-        <p className="mt-1">{message.content}</p>
+        <p>{message.content}</p>
         
-        <span className="text-xs opacity-50 mt-1">
+        <span className="text-xs text-muted-foreground">
           {message.timestamp.toLocaleTimeString()}
         </span>
       </div>
