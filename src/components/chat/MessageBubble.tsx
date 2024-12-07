@@ -12,7 +12,7 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
   
   return (
     <div className={`flex ${isCurrentUser ? "justify-end" : "justify-start"} py-1 px-2 hover:bg-secondary/50`}>
-      <div className="text-xs space-y-1">
+      <div className="text-xs">
         <div className="flex items-center gap-1">
           <span className="font-medium">
             {isCurrentUser ? "Vous" : message.sender}:
@@ -23,10 +23,11 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
               <span>MP</span>
             </div>
           )}
+          <span>{message.content}</span>
         </div>
         
         {message.image && (
-          <div className="relative">
+          <div className="relative mt-1">
             <img
               src={message.image}
               alt="Shared"
@@ -40,12 +41,6 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
             </div>
           </div>
         )}
-        
-        <p>{message.content}</p>
-        
-        <span className="text-xs text-muted-foreground">
-          {message.timestamp.toLocaleTimeString()}
-        </span>
       </div>
     </div>
   );
