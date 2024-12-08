@@ -34,10 +34,17 @@ const Chat = () => {
     id: "1",
     name: "général",
     createdAt: new Date(),
-    createdBy: "system"
+    createdBy: "system",
+    connectedUsers: [
+      { id: "1", username: "Alice", isOnline: true },
+      { id: "2", username: "Bob", isOnline: true },
+    ]
   });
   const [isInCall, setIsInCall] = useState(false);
   const { toast } = useToast();
+
+  console.log("Selected channel:", selectedChannel);
+  console.log("Connected users:", selectedChannel?.connectedUsers);
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
@@ -93,12 +100,9 @@ const Chat = () => {
   );
 
   return (
-    <div className="flex h-screen bg-background chat-background">
+    <div className="flex h-screen bg-background">
       <div className="flex-1">
-        <ResizablePanelGroup
-          direction="horizontal"
-          className="min-h-screen"
-        >
+        <ResizablePanelGroup direction="horizontal">
           <ResizablePanel defaultSize={20} minSize={15} className="bg-card">
             <ChatSidebar 
               selectedUser={selectedUser} 
