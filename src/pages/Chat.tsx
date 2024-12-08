@@ -8,6 +8,8 @@ import { useToast } from "@/components/ui/use-toast";
 import { VideoCall } from "@/components/chat/VideoCall";
 import { Button } from "@/components/ui/button";
 import { Video, Hash } from "lucide-react";
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
+import { UserList } from "@/components/chat/UserList";
 
 const Chat = () => {
   const [messages, setMessages] = useState<Message[]>([
@@ -93,52 +95,75 @@ const Chat = () => {
 
   return (
     <div className="flex h-screen bg-background chat-background">
-      <ChatSidebar 
-        selectedUser={selectedUser} 
-        onSelectUser={setSelectedUser}
-        selectedChannel={selectedChannel}
-        onSelectChannel={setSelectedChannel}
-      />
-      <div className="flex-1 flex flex-col bg-white/80 backdrop-blur-sm">
-        <div className="border-b p-4 flex justify-between items-center bg-white/90">
-          <h1 className="font-semibold flex items-center gap-2">
-            {selectedChannel ? (
-              <>
-                <Hash className="h-5 w-5" />
-                {selectedChannel.name}
-              </>
-            ) : (
-              `Chat Privé avec ${selectedUser?.username}`
-            )}
-          </h1>
-          {selectedUser && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={startVideoCall}
-              className="flex items-center gap-2"
-            >
-              <Video className="h-4 w-4" />
-              Appel vidéo
-            </Button>
-          )}
-        </div>
+      <ResizablePanelGroup direction="horizontal">
+        <ResizablePanel defaultSize={20} minSize={15}>
+          <ChatSidebar 
+            selectedUser={selectedUser} 
+            onSelectUser={setSelectedUser}
+            selectedChannel={selectedChannel}
+            onSelectChannel={setSelectedChannel}
+          />
+        </ResizablePanel>
+        
+        <ResizableHandle withHandle />
+        
+        <ResizablePanel defaultSize={60}>
+          <div className="flex flex-col h-full bg-white/80 backdrop-blur-sm">
+            <div className="border-b p-4 flex justify-between items-center bg-white/90">
+              <h1 className="font-semibold flex items-center gap-2">
+                {selectedChannel ? (
+                  <>
+                    <Hash className="h-5 w-5" />
+                    {selectedChannel.name}
+                  </>
+                ) : (
+                  `Chat Privé avec ${selectedUser?.username}`
+                )}
+              </h1>
+              {selectedUser && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={startVideoCall}
+                  className="flex items-center gap-2"
+                >
+                  <Video className="h-4 w-4" />
+                  Appel vidéo
+                </Button>
+              )}
+            </div>
 
-        <ScrollArea className="flex-1 p-4">
-          <div className="space-y-4">
-            {filteredMessages.map((message) => (
-              <MessageBubble key={message.id} message={message} />
+            <ScrollArea className="flex-1 p-4">
+              <div className="space-y-4">
+                {filteredMessages.map((message) => (
+                  <MessageBubble key={message.id} message={message} />
+                ))}
+              </div>
+            </ScrollArea>
+
+            <MessageInput
+              newMessage={newMessage}
+              setNewMessage={setNewMessage}
+              handleSendMessage={handleSendMessage}
+              handleImageSelect={handleImageSelect}
+            />
+          </div>
+        </ResizablePanel>
+
+        <ResizableHandle withHandle />
+        
+        <ResizablePanel defaultSize={20} minSize={15}>
+          <div className="h-full border-l bg-card p-4">
+            <h2 className="font-semibold text-sm mb-4">Utilisateurs connectés</h2>
+            {selectedChannel?.connectedUsers?.map((user) => (
+              <div key={user.id} className="flex items-center space-x-2 p-2">
+                <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                <span className="text-sm">{user.username}</span>
+              </div>
             ))}
           </div>
-        </ScrollArea>
-
-        <MessageInput
-          newMessage={newMessage}
-          setNewMessage={setNewMessage}
-          handleSendMessage={handleSendMessage}
-          handleImageSelect={handleImageSelect}
-        />
-      </div>
+        </ResizablePanel>
+      </ResizablePanelGroup>
 
       {isInCall && selectedUser && (
         <VideoCall
