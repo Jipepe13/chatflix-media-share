@@ -22,4 +22,5 @@ export interface Channel {
   description?: string;
   createdBy?: string;
   createdAt: Date;
+  connectedUsers?: User[];
 }
