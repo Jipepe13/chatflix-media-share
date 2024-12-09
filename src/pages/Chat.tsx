@@ -12,6 +12,13 @@ import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/componen
 import { DonationDialog } from "@/components/DonationDialog";
 
 const Chat = () => {
+  // Simuler un utilisateur courant
+  const currentUser: User = {
+    id: "current-user",
+    username: "Moi",
+    isOnline: true
+  };
+
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
@@ -37,6 +44,7 @@ const Chat = () => {
     createdAt: new Date(),
     createdBy: "system",
     connectedUsers: [
+      currentUser, // Ajouter l'utilisateur courant
       { id: "1", username: "Alice", isOnline: true },
       { id: "2", username: "Bob", isOnline: true },
     ]
