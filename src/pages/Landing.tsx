@@ -7,6 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { DonationDialog } from "@/components/DonationDialog";
 
 const Landing = () => {
   return (
@@ -20,11 +21,14 @@ const Landing = () => {
           <p className="text-xl text-gray-600 mb-8">
             Partagez et discutez gratuitement avec votre communauté
           </p>
-          <Link to="/auth">
-            <Button size="lg" className="animate-pulse hover:animate-none">
-              Commencer Gratuitement
-            </Button>
-          </Link>
+          <div className="flex justify-center gap-4">
+            <Link to="/auth">
+              <Button size="lg" className="animate-pulse hover:animate-none">
+                Commencer Gratuitement
+              </Button>
+            </Link>
+            <DonationDialog />
+          </div>
         </div>
 
         {/* Disclaimer */}

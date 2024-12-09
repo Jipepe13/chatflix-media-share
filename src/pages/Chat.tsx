@@ -9,6 +9,7 @@ import { VideoCall } from "@/components/chat/VideoCall";
 import { Button } from "@/components/ui/button";
 import { Video, Hash } from "lucide-react";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
+import { DonationDialog } from "@/components/DonationDialog";
 
 const Chat = () => {
   const [messages, setMessages] = useState<Message[]>([
@@ -104,6 +105,9 @@ const Chat = () => {
       <div className="flex-1">
         <ResizablePanelGroup direction="horizontal">
           <ResizablePanel defaultSize={20} minSize={15} className="bg-card">
+            <div className="p-4">
+              <DonationDialog />
+            </div>
             <ChatSidebar 
               selectedUser={selectedUser} 
               onSelectUser={setSelectedUser}
