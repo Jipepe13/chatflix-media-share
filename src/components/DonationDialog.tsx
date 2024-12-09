@@ -3,96 +3,28 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useToast } from "@/components/ui/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-
-const SUPPORTED_CURRENCIES = [
-  { value: "BTC", label: "Bitcoin (BTC)" },
-  { value: "ETH", label: "Ethereum (ETH)" },
-  { value: "BNB", label: "Binance Coin (BNB)" },
-  { value: "DOGE", label: "Dogecoin (DOGE)" },
-  { value: "SHIB", label: "Shiba Inu (SHIB)" },
-  { value: "PEPE", label: "Pepe (PEPE)" },
-];
+import { SUPPORTED_CURRENCIES } from "@/constants/crypto";
+import { useDonation } from "@/hooks/useDonation";
 
 export function DonationDialog() {
   const [isOpen, setIsOpen] = useState(false);
-  const [currency, setCurrency] = useState<string>("");
-  const [amount, setAmount] = useState("");
-  const [email, setEmail] = useState("");
-  const [transactionHash, setTransactionHash] = useState("");
-  const [walletAddress, setWalletAddress] = useState("");
-  const [showWallet, setShowWallet] = useState(false);
-  const { toast } = useToast();
+  const {
+    currency,
+    amount,
+    email,
+    transactionHash,
+    walletAddress,
+    showWallet,
+    setAmount,
+    setEmail,
+    setTransactionHash,
+    handleCurrencySelect,
+    submitDonation,
+  } = useDonation();
 
-  const handleCurrencySelect = async (value: string) => {
-    setCurrency(value);
-    const { data: walletData, error } = await supabase
-      .from("crypto_wallets")
-      .select("address")
-      .eq("currency", value)
-      .single();
-
-    if (error) {
-      console.error("Error fetching wallet address:", error);
-      toast({
-        variant: "destructive",
-        title: "Erreur",
-        description: "Impossible de récupérer l'adresse du portefeuille",
-      });
-      return;
-    }
-
-    setWalletAddress(walletData.address);
-    setShowWallet(false);
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Submitting donation:", { currency, amount, email, transactionHash });
-
-    try {
-      // Convert amount to number before sending to Supabase
-      const numericAmount = parseFloat(amount);
-      if (isNaN(numericAmount)) {
-        throw new Error("Le montant doit être un nombre valide");
-      }
-
-      // Save donation to database
-      const { error: donationError } = await supabase.from("donations").insert({
-        currency,
-        amount: numericAmount, // Now sending a number instead of a string
-        donor_email: email,
-        transaction_hash: transactionHash,
-      });
-
-      if (donationError) throw donationError;
-
-      // Send confirmation emails
-      const { error: emailError } = await supabase.functions.invoke("send-donation-email", {
-        body: {
-          donorEmail: email,
-          amount: numericAmount,
-          currency,
-          transactionHash,
-        },
-      });
-
-      if (emailError) throw emailError;
-
-      setShowWallet(true);
-      toast({
-        title: "Merci pour votre don !",
-        description: "Un email de confirmation vous a été envoyé.",
-      });
-    } catch (error) {
-      console.error("Error processing donation:", error);
-      toast({
-        variant: "destructive",
-        title: "Erreur",
-        description: "Une erreur est survenue lors du traitement de votre don",
-      });
-    }
+    submitDonation();
   };
 
   return (
