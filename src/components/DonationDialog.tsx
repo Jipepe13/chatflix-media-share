@@ -53,6 +53,16 @@ export function DonationDialog() {
             </Select>
           </div>
 
+          {currency && walletAddress && (
+            <div className="mt-4 p-4 bg-secondary rounded-lg">
+              <p className="font-medium mb-2">Adresse du portefeuille :</p>
+              <p className="break-all text-sm">{walletAddress}</p>
+              <p className="text-xs text-muted-foreground mt-2">
+                Envoyez vos {currency} à cette adresse, puis remplissez le formulaire ci-dessous avec les détails de la transaction.
+              </p>
+            </div>
+          )}
+
           <div className="space-y-2">
             <label htmlFor="amount">Montant</label>
             <Input
@@ -84,18 +94,14 @@ export function DonationDialog() {
               onChange={(e) => setTransactionHash(e.target.value)}
               required
             />
+            <p className="text-xs text-muted-foreground">
+              Le hash de transaction est l'identifiant unique de votre transfert. Vous le trouverez dans votre portefeuille ou sur l'exchange après avoir effectué le transfert.
+            </p>
           </div>
 
           <Button type="submit" className="w-full">
             Confirmer le don
           </Button>
-
-          {showWallet && walletAddress && (
-            <div className="mt-4 p-4 bg-secondary rounded-lg">
-              <p className="font-medium mb-2">Adresse du portefeuille :</p>
-              <p className="break-all">{walletAddress}</p>
-            </div>
-          )}
         </form>
       </DialogContent>
     </Dialog>
