@@ -52,15 +52,19 @@ export function DonationDialog() {
     console.log("Submitting donation:", { currency, amount, email, transactionHash });
 
     try {
+      // Convert amount to number before sending to Supabase
+      const numericAmount = parseFloat(amount);
+      if (isNaN(numericAmount)) {
+        throw new Error("Le montant doit être un nombre valide");
+      }
+
       // Save donation to database
-      const { error: donationError } = await supabase.from("donations").insert([
-        {
-          currency,
-          amount,
-          donor_email: email,
-          transaction_hash: transactionHash,
-        },
-      ]);
+      const { error: donationError } = await supabase.from("donations").insert({
+        currency,
+        amount: numericAmount, // Now sending a number instead of a string
+        donor_email: email,
+        transaction_hash: transactionHash,
+      });
 
       if (donationError) throw donationError;
 
@@ -68,7 +72,7 @@ export function DonationDialog() {
       const { error: emailError } = await supabase.functions.invoke("send-donation-email", {
         body: {
           donorEmail: email,
-          amount,
+          amount: numericAmount,
           currency,
           transactionHash,
         },
