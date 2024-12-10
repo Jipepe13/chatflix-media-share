@@ -1,14 +1,14 @@
 import { Message } from "@/types/chat";
 import { preventImageCopy } from "@/utils/image";
-import { cn } from "@/lib/utils";
 import { MessageCircle } from "lucide-react";
 
 interface MessageBubbleProps {
   message: Message;
+  isOwnMessage?: boolean;
 }
 
-export const MessageBubble = ({ message }: MessageBubbleProps) => {
-  const isCurrentUser = message.sender === "currentUser";
+export const MessageBubble = ({ message, isOwnMessage }: MessageBubbleProps) => {
+  const isCurrentUser = isOwnMessage || message.sender === "currentUser";
   
   return (
     <div className={`flex ${isCurrentUser ? "justify-end" : "justify-start"} py-1 px-2 hover:bg-secondary/50`}>
