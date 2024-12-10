@@ -7,6 +7,9 @@ export interface Message {
   timestamp: Date;
   image?: string;
   channelId?: string;
+  createdAt: Date;
+  createdBy: string;
+  connectedUsers?: User[];
 }
 
 export interface User {

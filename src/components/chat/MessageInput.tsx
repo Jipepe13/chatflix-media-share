@@ -7,6 +7,7 @@ interface MessageInputProps {
   setNewMessage: (message: string) => void;
   handleSendMessage: (e: React.FormEvent) => void;
   handleImageSelect: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onSendMessage: (content: string) => void;
 }
 
 export const MessageInput = ({
@@ -14,6 +15,7 @@ export const MessageInput = ({
   setNewMessage,
   handleSendMessage,
   handleImageSelect,
+  onSendMessage,
 }: MessageInputProps) => {
   return (
     <form onSubmit={handleSendMessage} className="p-4 border-t">

@@ -8,9 +8,10 @@ interface VideoCallProps {
   isInitiator: boolean;
   userId: string;
   onClose: () => void;
+  onEndCall: () => void;
 }
 
-export const VideoCall = ({ isInitiator, userId, onClose }: VideoCallProps) => {
+export const VideoCall = ({ isInitiator, userId, onClose, onEndCall }: VideoCallProps) => {
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [isVideoEnabled, setIsVideoEnabled] = useState(true);
   const [isAudioEnabled, setIsAudioEnabled] = useState(true);

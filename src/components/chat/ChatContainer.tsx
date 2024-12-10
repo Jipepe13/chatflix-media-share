@@ -6,7 +6,6 @@ import { MessageInput } from "./MessageInput";
 import { VideoCall } from "./VideoCall";
 
 export const ChatContainer = () => {
-  // Simuler un utilisateur courant
   const currentUser: User = {
     id: "current-user",
     username: "Moi",
@@ -17,10 +16,12 @@ export const ChatContainer = () => {
     {
       id: "1",
       content: "Bienvenue dans le salon général !",
+      sender: "system",
+      timestamp: new Date(),
       createdAt: new Date(),
       createdBy: "system",
       connectedUsers: [
-        currentUser, // Ajouter l'utilisateur courant
+        currentUser,
         { id: "1", username: "Alice", isOnline: true },
         { id: "2", username: "Bob", isOnline: true },
       ]
@@ -28,11 +29,14 @@ export const ChatContainer = () => {
   ]);
 
   const [isVideoCallActive, setIsVideoCallActive] = useState(false);
+  const [newMessage, setNewMessage] = useState("");
 
   const handleSendMessage = (content: string) => {
     const newMessage: Message = {
       id: Date.now().toString(),
       content,
+      sender: currentUser.username,
+      timestamp: new Date(),
       createdAt: new Date(),
       createdBy: currentUser.id,
     };
@@ -47,13 +51,40 @@ export const ChatContainer = () => {
     setIsVideoCallActive(false);
   };
 
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Handle image selection
+    console.log("Image selected:", e.target.files?.[0]);
+  };
+
   return (
     <div className="flex h-[calc(100vh-4rem)]">
-      <ChatSidebar currentUser={currentUser} onStartVideoCall={handleStartVideoCall} />
+      <ChatSidebar 
+        currentUser={currentUser} 
+        onStartVideoCall={handleStartVideoCall}
+        onSelectUser={() => {}}
+        onSelectChannel={() => {}}
+      />
       <div className="flex-1 flex flex-col">
-        {isVideoCallActive && <VideoCall onEndCall={handleEndVideoCall} />}
+        {isVideoCallActive && (
+          <VideoCall 
+            isInitiator={true}
+            userId="other-user"
+            onClose={handleEndVideoCall}
+            onEndCall={handleEndVideoCall}
+          />
+        )}
         <MessageList messages={messages} currentUser={currentUser} />
-        <MessageInput onSendMessage={handleSendMessage} />
+        <MessageInput 
+          newMessage={newMessage}
+          setNewMessage={setNewMessage}
+          handleSendMessage={(e) => {
+            e.preventDefault();
+            handleSendMessage(newMessage);
+            setNewMessage("");
+          }}
+          handleImageSelect={handleImageSelect}
+          onSendMessage={handleSendMessage}
+        />
       </div>
     </div>
   );

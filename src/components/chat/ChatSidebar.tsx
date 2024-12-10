@@ -3,13 +3,17 @@ import { ChannelList } from "./ChannelList";
 import { UserList } from "./UserList";
 
 interface ChatSidebarProps {
+  currentUser: User;
+  onStartVideoCall: () => void;
   selectedUser?: User | null;
-  onSelectUser: (user: User | null) => void;
+  onSelectUser?: (user: User | null) => void;
   selectedChannel?: Channel | null;
-  onSelectChannel: (channel: Channel | null) => void;
+  onSelectChannel?: (channel: Channel | null) => void;
 }
 
 export const ChatSidebar = ({ 
+  currentUser,
+  onStartVideoCall,
   selectedUser, 
   onSelectUser, 
   selectedChannel, 
