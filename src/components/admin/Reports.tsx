@@ -25,7 +25,7 @@ type Report = {
 };
 
 export const Reports = () => {
-  const { data: reports, refetch } = useQuery({
+  const { data: reports, refetch } = useQuery<Report[]>({
     queryKey: ["reports"],
     queryFn: async () => {
       const { data, error } = await supabase
