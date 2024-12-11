@@ -7,6 +7,7 @@ import Auth from "./pages/Auth";
 import Chat from "./pages/Chat";
 import Profile from "./pages/Profile";
 import Landing from "./pages/Landing";
+import Admin from "./pages/Admin";
 import { Footer } from "./components/Footer";
 
 const queryClient = new QueryClient();
@@ -24,6 +25,7 @@ const App = () => (
             <Route path="/chat" element={<Chat />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/profile/:userId" element={<Profile />} />
+            <Route path="/admin" element={<Admin />} />
           </Routes>
           <Footer />
         </BrowserRouter>

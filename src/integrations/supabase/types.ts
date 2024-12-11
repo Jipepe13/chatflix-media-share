@@ -9,6 +9,27 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      connection_logs: {
+        Row: {
+          connected_at: string
+          disconnected_at: string | null
+          id: string
+          user_id: string | null
+        }
+        Insert: {
+          connected_at?: string
+          disconnected_at?: string | null
+          id?: string
+          user_id?: string | null
+        }
+        Update: {
+          connected_at?: string
+          disconnected_at?: string | null
+          id?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       crypto_wallets: {
         Row: {
           address: string
@@ -57,6 +78,90 @@ export type Database = {
           id?: string
           status?: string
           transaction_hash?: string
+        }
+        Relationships: []
+      }
+      user_bans: {
+        Row: {
+          banned_by: string | null
+          created_at: string
+          end_date: string
+          id: string
+          reason: string | null
+          start_date: string
+          user_id: string
+        }
+        Insert: {
+          banned_by?: string | null
+          created_at?: string
+          end_date: string
+          id?: string
+          reason?: string | null
+          start_date?: string
+          user_id: string
+        }
+        Update: {
+          banned_by?: string | null
+          created_at?: string
+          end_date?: string
+          id?: string
+          reason?: string | null
+          start_date?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_reports: {
+        Row: {
+          comment: string
+          created_at: string
+          id: string
+          reported_user_id: string
+          reporter_id: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          status: string | null
+        }
+        Insert: {
+          comment: string
+          created_at?: string
+          id?: string
+          reported_user_id: string
+          reporter_id?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string | null
+        }
+        Update: {
+          comment?: string
+          created_at?: string
+          id?: string
+          reported_user_id?: string
+          reporter_id?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string | null
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          role: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          role: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          role?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
