@@ -56,8 +56,8 @@ export const Reports = () => {
       // Transform the data to match our Report type
       const transformedData = data?.map(report => ({
         ...report,
-        reported_user: report.reported_user ? { email: (report.reported_user as SupabaseUser).email } : null,
-        reporter: report.reporter ? { email: (report.reporter as SupabaseUser).email } : null
+        reported_user: report.reported_user ? { email: (report.reported_user as unknown as SupabaseUser).email } : null,
+        reporter: report.reporter ? { email: (report.reporter as unknown as SupabaseUser).email } : null
       })) || [];
 
       return transformedData as Report[];
