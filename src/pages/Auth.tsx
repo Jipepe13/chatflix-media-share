@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Eye, EyeOff, MessageCircle, Camera } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -19,8 +20,39 @@ const Auth = () => {
     
     try {
       console.log("Auth submitted:", { email, password, username });
-      toast.success(isLogin ? "Connexion réussie !" : "Inscription réussie !");
-      navigate("/chat");
+      
+      if (isLogin) {
+        const { data: { user }, error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+        if (error) throw error;
+
+        // Vérifier si l'utilisateur est admin
+        const { data: roles } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user?.id)
+          .single();
+
+        if (roles?.role === 'admin' && email === 'cassecou100@gmail.com') {
+          navigate('/admin');
+        } else {
+          navigate('/chat');
+        }
+
+        toast.success("Connexion réussie !");
+      } else {
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+        });
+
+        if (error) throw error;
+        toast.success("Inscription réussie !");
+        navigate("/chat");
+      }
     } catch (error) {
       console.error("Auth error:", error);
       toast.error("Une erreur est survenue");
