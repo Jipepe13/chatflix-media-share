@@ -37,12 +37,8 @@ export const Reports = () => {
         .from("user_reports")
         .select(`
           *,
-          reported_user:reported_user_id(
-            email
-          ),
-          reporter:reporter_id(
-            email
-          )
+          reported_user:reported_user_id(email),
+          reporter:reporter_id(email)
         `)
         .order("created_at", { ascending: false });
 
@@ -56,8 +52,8 @@ export const Reports = () => {
       // Transform the data to match our Report type
       const transformedData = data?.map(report => ({
         ...report,
-        reported_user: report.reported_user ? { email: report.reported_user.email } : null,
-        reporter: report.reporter ? { email: report.reporter.email } : null
+        reported_user: report.reported_user ? { email: report.reported_user.email as string } : null,
+        reporter: report.reporter ? { email: report.reporter.email as string } : null
       })) || [];
 
       return transformedData as Report[];
