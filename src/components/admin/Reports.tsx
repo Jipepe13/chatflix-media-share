@@ -41,8 +41,13 @@ export const Reports = () => {
         `)
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
-      return data as Report[];
+      if (error) {
+        console.error("Error fetching reports:", error);
+        throw error;
+      }
+
+      // Type assertion to ensure the response matches our Report type
+      return (data || []) as Report[];
     },
   });
 
