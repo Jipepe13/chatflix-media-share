@@ -13,15 +13,19 @@ import { toast } from "sonner";
 
 type Report = {
   id: string;
+  reported_user_id: string;
+  reporter_id: string | null;
+  comment: string;
+  status: string | null;
+  created_at: string;
+  resolved_at: string | null;
+  resolved_by: string | null;
   reported_user: { email: string } | null;
   reporter: { email: string } | null;
-  comment: string;
-  created_at: string;
-  status: string;
 };
 
 export const Reports = () => {
-  const { data: reports, refetch } = useQuery<Report[]>({
+  const { data: reports, refetch } = useQuery({
     queryKey: ["reports"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -34,7 +38,7 @@ export const Reports = () => {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return data;
+      return data as Report[];
     },
   });
 
