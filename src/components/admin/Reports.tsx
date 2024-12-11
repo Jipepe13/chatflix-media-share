@@ -1,15 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { ReportTable } from "./ReportTable";
 
 type Report = {
   id: string;
@@ -53,7 +45,6 @@ export const Reports = () => {
 
       console.log("Reports data:", data);
       
-      // Transform the data to match our Report type
       const transformedData = data?.map(report => ({
         ...report,
         reported_user: report.reported_user ? { email: (report.reported_user as unknown as SupabaseUser).email } : null,
@@ -87,42 +78,7 @@ export const Reports = () => {
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold">Signalements</h2>
-
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Utilisateur signalé</TableHead>
-            <TableHead>Signalé par</TableHead>
-            <TableHead>Commentaire</TableHead>
-            <TableHead>Date</TableHead>
-            <TableHead>Statut</TableHead>
-            <TableHead>Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {reports?.map((report) => (
-            <TableRow key={report.id}>
-              <TableCell>{report.reported_user?.email}</TableCell>
-              <TableCell>{report.reporter?.email}</TableCell>
-              <TableCell>{report.comment}</TableCell>
-              <TableCell>
-                {new Date(report.created_at).toLocaleDateString()}
-              </TableCell>
-              <TableCell>{report.status}</TableCell>
-              <TableCell>
-                {report.status === "pending" && (
-                  <Button
-                    size="sm"
-                    onClick={() => handleResolveReport(report.id)}
-                  >
-                    Résoudre
-                  </Button>
-                )}
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+      <ReportTable reports={reports || []} onResolve={handleResolveReport} />
     </div>
   );
 };
