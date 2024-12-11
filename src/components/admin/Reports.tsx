@@ -52,7 +52,15 @@ export const Reports = () => {
       }
 
       console.log("Reports data:", data);
-      return (data || []) as Report[];
+      
+      // Transform the data to match our Report type
+      const transformedData = data?.map(report => ({
+        ...report,
+        reported_user: report.reported_user ? { email: report.reported_user.email } : null,
+        reporter: report.reporter ? { email: report.reporter.email } : null
+      })) || [];
+
+      return transformedData as Report[];
     },
   });
 
