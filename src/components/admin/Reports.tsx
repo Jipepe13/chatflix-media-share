@@ -28,6 +28,10 @@ type Report = {
   } | null;
 };
 
+type SupabaseUser = {
+  email: string;
+}
+
 export const Reports = () => {
   const { data: reports, refetch } = useQuery({
     queryKey: ["reports"],
@@ -52,8 +56,8 @@ export const Reports = () => {
       // Transform the data to match our Report type
       const transformedData = data?.map(report => ({
         ...report,
-        reported_user: report.reported_user ? { email: report.reported_user.email as string } : null,
-        reporter: report.reporter ? { email: report.reporter.email as string } : null
+        reported_user: report.reported_user ? { email: (report.reported_user as SupabaseUser).email } : null,
+        reporter: report.reporter ? { email: (report.reporter as SupabaseUser).email } : null
       })) || [];
 
       return transformedData as Report[];
