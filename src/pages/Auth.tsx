@@ -29,16 +29,27 @@ const Auth = () => {
 
         if (error) throw error;
 
+        console.log("User logged in:", user);
+
         // Vérifier si l'utilisateur est admin
-        const { data: roles } = await supabase
+        const { data: roles, error: rolesError } = await supabase
           .from('user_roles')
           .select('role')
           .eq('user_id', user?.id)
           .single();
 
+        if (rolesError) {
+          console.error("Error fetching roles:", rolesError);
+          throw rolesError;
+        }
+
+        console.log("User roles:", roles);
+
         if (roles?.role === 'admin' && email === 'cassecou100@gmail.com') {
+          console.log("Redirecting to admin panel");
           navigate('/admin');
         } else {
+          console.log("Redirecting to chat");
           navigate('/chat');
         }
 
