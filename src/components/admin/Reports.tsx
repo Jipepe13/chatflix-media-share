@@ -32,8 +32,12 @@ export const Reports = () => {
         .from("user_reports")
         .select(`
           *,
-          reported_user:reported_user_id(email),
-          reporter:reporter_id(email)
+          reported_user:reported_user_id(
+            email
+          ),
+          reporter:reporter_id(
+            email
+          )
         `)
         .order("created_at", { ascending: false });
 
