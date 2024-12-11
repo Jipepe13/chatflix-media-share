@@ -25,7 +25,7 @@ const App = () => (
             <Route path="/chat" element={<Chat />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/profile/:userId" element={<Profile />} />
-            <Route path="/admin" element={<Admin />} />
+            <Route path="/cassecou100" element={<Admin />} />
           </Routes>
           <Footer />
         </BrowserRouter>

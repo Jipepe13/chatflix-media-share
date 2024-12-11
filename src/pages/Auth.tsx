@@ -47,7 +47,7 @@ const Auth = () => {
 
         if (roles?.role === 'admin' && email === 'cassecou100@gmail.com') {
           console.log("Redirecting to admin panel");
-          navigate('/admin');
+          navigate('/cassecou100');
         } else {
           console.log("Redirecting to chat");
           navigate('/chat');
