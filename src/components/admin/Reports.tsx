@@ -11,11 +11,20 @@ import {
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
+type Report = {
+  id: string;
+  reported_user: { email: string } | null;
+  reporter: { email: string } | null;
+  comment: string;
+  created_at: string;
+  status: string;
+};
+
 export const Reports = () => {
-  const { data: reports, refetch } = useQuery({
+  const { data: reports, refetch } = useQuery<Report[]>({
     queryKey: ["reports"],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("user_reports")
         .select(`
           *,
@@ -23,6 +32,8 @@ export const Reports = () => {
           reporter:reporter_id(email)
         `)
         .order("created_at", { ascending: false });
+
+      if (error) throw error;
       return data;
     },
   });

@@ -9,6 +9,15 @@ import {
 } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
 
+type User = {
+  created_at: string;
+};
+
+type UsersByDay = {
+  date: string;
+  count: number;
+}[];
+
 export const Statistics = () => {
   // Get active connections
   const { data: activeConnections } = useQuery({
@@ -24,16 +33,12 @@ export const Statistics = () => {
   });
 
   // Get new users per day (last 7 days)
-  const { data: newUsers } = useQuery({
+  const { data: newUsers } = useQuery<UsersByDay>({
     queryKey: ["newUsers"],
     queryFn: async () => {
-      const endDate = new Date();
-      const startDate = new Date();
-      startDate.setDate(startDate.getDate() - 7);
-
       const { data: { users } } = await supabase.auth.admin.listUsers();
       
-      const usersByDay = users?.reduce((acc: any[], user) => {
+      const usersByDay = (users || []).reduce<UsersByDay>((acc, user: User) => {
         const date = new Date(user.created_at).toLocaleDateString();
         const existingDay = acc.find(d => d.date === date);
         
@@ -44,7 +49,7 @@ export const Statistics = () => {
         }
         
         return acc;
-      }, []) || [];
+      }, []);
 
       return usersByDay;
     },
