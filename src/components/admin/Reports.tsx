@@ -32,12 +32,17 @@ export const Reports = () => {
   const { data: reports, refetch } = useQuery({
     queryKey: ["reports"],
     queryFn: async () => {
+      console.log("Fetching reports...");
       const { data, error } = await supabase
         .from("user_reports")
         .select(`
           *,
-          reported_user:reported_user_id(email),
-          reporter:reporter_id(email)
+          reported_user:reported_user_id(
+            email
+          ),
+          reporter:reporter_id(
+            email
+          )
         `)
         .order("created_at", { ascending: false });
 
@@ -46,7 +51,7 @@ export const Reports = () => {
         throw error;
       }
 
-      // Type assertion to ensure the response matches our Report type
+      console.log("Reports data:", data);
       return (data || []) as Report[];
     },
   });
