@@ -20,8 +20,12 @@ type Report = {
   created_at: string;
   resolved_at: string | null;
   resolved_by: string | null;
-  reported_user: { email: string } | null;
-  reporter: { email: string } | null;
+  reported_user: {
+    email: string;
+  } | null;
+  reporter: {
+    email: string;
+  } | null;
 };
 
 export const Reports = () => {
