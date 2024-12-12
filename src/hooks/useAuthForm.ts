@@ -27,11 +27,15 @@ export const useAuthForm = () => {
 
         console.log("User logged in:", user);
 
+        if (!user) {
+          throw new Error("No user data returned");
+        }
+
         // Fetch user role
-        const { data: roles, error: rolesError } = await supabase
+        const { data: roleData, error: rolesError } = await supabase
           .from('user_roles')
           .select('role')
-          .eq('user_id', user?.id)
+          .eq('user_id', user.id)
           .single();
 
         if (rolesError) {
@@ -39,11 +43,11 @@ export const useAuthForm = () => {
           throw rolesError;
         }
 
-        console.log("User roles:", roles);
+        console.log("User role data:", roleData);
 
         // Check if user is admin and has the specific email
-        if (roles?.role === 'admin' && email === 'cassecou100@gmail.com') {
-          console.log("Admin user detected, redirecting to admin panel");
+        if (email === 'cassecou100@gmail.com' && roleData?.role === 'admin') {
+          console.log("Admin user detected, redirecting to admin panel at /cassecou100");
           navigate('/cassecou100');
         } else {
           console.log("Regular user, redirecting to chat");
