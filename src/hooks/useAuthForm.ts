@@ -18,6 +18,8 @@ export const useAuthForm = () => {
       console.log("Auth submitted:", { email, password, username });
       
       if (isLogin) {
+        console.log("Attempting login with email:", email);
+        
         const { data: { user }, error } = await supabase.auth.signInWithPassword({
           email,
           password,
@@ -28,13 +30,15 @@ export const useAuthForm = () => {
           throw error;
         }
 
-        console.log("User logged in:", user);
+        console.log("User logged in successfully:", user);
 
         if (!user) {
           console.error("No user data returned after login");
           throw new Error("No user data returned");
         }
 
+        console.log("Fetching user role for user ID:", user.id);
+        
         // Fetch user role
         const { data: roleData, error: rolesError } = await supabase
           .from('user_roles')
@@ -60,6 +64,8 @@ export const useAuthForm = () => {
 
         toast.success("Connexion réussie !");
       } else {
+        console.log("Attempting signup with email:", email);
+        
         const { error } = await supabase.auth.signUp({
           email,
           password,
