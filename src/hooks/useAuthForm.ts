@@ -27,6 +27,7 @@ export const useAuthForm = () => {
 
         console.log("User logged in:", user);
 
+        // Fetch user role
         const { data: roles, error: rolesError } = await supabase
           .from('user_roles')
           .select('role')
@@ -40,11 +41,12 @@ export const useAuthForm = () => {
 
         console.log("User roles:", roles);
 
+        // Check if user is admin and has the specific email
         if (roles?.role === 'admin' && email === 'cassecou100@gmail.com') {
-          console.log("Redirecting to admin panel");
+          console.log("Admin user detected, redirecting to admin panel");
           navigate('/cassecou100');
         } else {
-          console.log("Redirecting to chat");
+          console.log("Regular user, redirecting to chat");
           navigate('/chat');
         }
 
@@ -59,9 +61,9 @@ export const useAuthForm = () => {
         toast.success("Inscription réussie !");
         navigate("/chat");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Auth error:", error);
-      toast.error("Une erreur est survenue");
+      toast.error(error.message || "Une erreur est survenue");
     }
   };
 
