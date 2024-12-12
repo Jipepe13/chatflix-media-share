@@ -23,11 +23,15 @@ export const useAuthForm = () => {
           password,
         });
 
-        if (error) throw error;
+        if (error) {
+          console.error("Login error:", error);
+          throw error;
+        }
 
         console.log("User logged in:", user);
 
         if (!user) {
+          console.error("No user data returned after login");
           throw new Error("No user data returned");
         }
 
@@ -61,7 +65,10 @@ export const useAuthForm = () => {
           password,
         });
 
-        if (error) throw error;
+        if (error) {
+          console.error("Signup error:", error);
+          throw error;
+        }
         toast.success("Inscription réussie !");
         navigate("/chat");
       }
