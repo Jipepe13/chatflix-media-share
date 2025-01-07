@@ -30,6 +30,28 @@ export const useAuthForm = () => {
     return "An unexpected error occurred. Please try again.";
   };
 
+  const checkUserRole = async (userId: string): Promise<string | null> => {
+    try {
+      console.log("Checking user role for ID:", userId);
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (error) {
+        console.error("Error checking user role:", error);
+        return null;
+      }
+
+      console.log("User role data:", data);
+      return data?.role || null;
+    } catch (error) {
+      console.error("Error in checkUserRole:", error);
+      return null;
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -58,22 +80,10 @@ export const useAuthForm = () => {
           throw new Error("No user data returned");
         }
 
-        console.log("Fetching user role for ID:", user.id);
-        
-        const { data: roleData, error: rolesError } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', user.id)
-          .single();
+        const userRole = await checkUserRole(user.id);
+        console.log("User role:", userRole);
 
-        if (rolesError) {
-          console.error("Error fetching roles:", rolesError);
-          throw rolesError;
-        }
-
-        console.log("User role data:", roleData);
-
-        if (email === 'cassecou100@gmail.com' && roleData?.role === 'admin') {
+        if (email === 'cassecou100@gmail.com' && userRole === 'admin') {
           console.log("Admin user detected, redirecting to admin panel");
           navigate('/cassecou100');
         } else {
