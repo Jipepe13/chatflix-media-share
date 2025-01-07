@@ -25,24 +25,45 @@ export const UsersManagement = () => {
   const { data: users, refetch } = useQuery({
     queryKey: ["adminUsers"],
     queryFn: async () => {
-      const { data: { users }, error: usersError } = await supabase.auth.admin.listUsers();
+      console.log("Fetching users and roles...");
       
-      if (usersError) {
-        console.error("Error fetching users:", usersError);
-        return [];
-      }
-
-      const { data: roles, error: rolesError } = await supabase.from("user_roles").select("*");
+      // Get all user roles
+      const { data: roles, error: rolesError } = await supabase
+        .from("user_roles")
+        .select("user_id, role");
       
       if (rolesError) {
         console.error("Error fetching roles:", rolesError);
-        return [];
+        throw rolesError;
       }
-      
-      return users?.map(user => ({
-        ...user,
-        role: roles?.find(r => r.user_id === user.id)?.role || "user"
-      })) || [];
+
+      // Get all users from auth.users through user_roles table
+      const { data: users, error: usersError } = await supabase
+        .from("user_roles")
+        .select(`
+          user_id,
+          role,
+          auth_user:user_id (
+            email,
+            last_sign_in_at
+          )
+        `);
+
+      if (usersError) {
+        console.error("Error fetching users:", usersError);
+        throw usersError;
+      }
+
+      // Transform the data to match the expected format
+      const transformedUsers = users.map(user => ({
+        id: user.user_id,
+        email: user.auth_user?.email,
+        role: user.role,
+        last_sign_in_at: user.auth_user?.last_sign_in_at
+      }));
+
+      console.log("Transformed users data:", transformedUsers);
+      return transformedUsers;
     },
   });
 
@@ -134,7 +155,7 @@ export const UsersManagement = () => {
                 </Select>
               </TableCell>
               <TableCell>
-                {new Date(user.last_sign_in_at || "").toLocaleDateString()}
+                {user.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleDateString() : 'Jamais'}
               </TableCell>
               <TableCell>
                 <Button
