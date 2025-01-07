@@ -19,6 +19,15 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 
+type UserWithRole = {
+  user_id: string;
+  role: string;
+  auth_user: {
+    email: string;
+    last_sign_in_at: string;
+  } | null;
+}
+
 export const UsersManagement = () => {
   const [selectedRole, setSelectedRole] = useState<string | null>(null);
 
@@ -27,16 +36,6 @@ export const UsersManagement = () => {
     queryFn: async () => {
       console.log("Fetching users and roles...");
       
-      // Get all user roles
-      const { data: roles, error: rolesError } = await supabase
-        .from("user_roles")
-        .select("user_id, role");
-      
-      if (rolesError) {
-        console.error("Error fetching roles:", rolesError);
-        throw rolesError;
-      }
-
       // Get all users from auth.users through user_roles table
       const { data: users, error: usersError } = await supabase
         .from("user_roles")
@@ -47,11 +46,15 @@ export const UsersManagement = () => {
             email,
             last_sign_in_at
           )
-        `);
+        `) as { data: UserWithRole[] | null; error: any };
 
       if (usersError) {
         console.error("Error fetching users:", usersError);
         throw usersError;
+      }
+
+      if (!users) {
+        return [];
       }
 
       // Transform the data to match the expected format
