@@ -33,21 +33,30 @@ export const useAuthForm = () => {
   const checkUserRole = async (userId: string): Promise<string | null> => {
     try {
       console.log("Checking user role for ID:", userId);
+      
+      // Use single() instead of maybeSingle() to get better error handling
       const { data, error } = await supabase
         .from('user_roles')
         .select('role')
         .eq('user_id', userId)
-        .maybeSingle();
+        .limit(1)
+        .single();
 
       if (error) {
+        if (error.code === 'PGRST116') {
+          // No role found
+          console.log("No role found for user");
+          return null;
+        }
         console.error("Error checking user role:", error);
-        return null;
+        throw error;
       }
 
       console.log("User role data:", data);
       return data?.role || null;
     } catch (error) {
       console.error("Error in checkUserRole:", error);
+      // Don't throw the error, just return null to allow the login flow to continue
       return null;
     }
   };
@@ -80,9 +89,15 @@ export const useAuthForm = () => {
           throw new Error("No user data returned");
         }
 
-        const userRole = await checkUserRole(user.id);
-        console.log("User role:", userRole);
+        let userRole = null;
+        try {
+          userRole = await checkUserRole(user.id);
+          console.log("User role:", userRole);
+        } catch (roleError) {
+          console.error("Error checking role, continuing with login:", roleError);
+        }
 
+        // Even if role check fails, allow login to proceed
         if (email === 'cassecou100@gmail.com' && userRole === 'admin') {
           console.log("Admin user detected, redirecting to admin panel");
           navigate('/cassecou100');
