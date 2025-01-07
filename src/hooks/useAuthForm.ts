@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { AuthError, AuthApiError } from "@supabase/supabase-js";
 
 export const useAuthForm = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -11,14 +12,34 @@ export const useAuthForm = () => {
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
+  const getErrorMessage = (error: AuthError) => {
+    console.error("Auth error details:", error);
+    
+    if (error instanceof AuthApiError) {
+      switch (error.status) {
+        case 400:
+          return "Invalid credentials. Please check your email and password.";
+        case 422:
+          return "Invalid email format.";
+        case 429:
+          return "Too many attempts. Please try again later.";
+        default:
+          return error.message;
+      }
+    }
+    return "An unexpected error occurred. Please try again.";
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     try {
-      console.log("Auth submitted:", { email, password, username });
+      console.log("Starting authentication process...");
+      console.log("Auth mode:", isLogin ? "login" : "signup");
+      console.log("Email being used:", email);
       
       if (isLogin) {
-        console.log("Attempting login with email:", email);
+        console.log("Attempting login...");
         
         const { data: { user }, error } = await supabase.auth.signInWithPassword({
           email,
@@ -30,16 +51,15 @@ export const useAuthForm = () => {
           throw error;
         }
 
-        console.log("User logged in successfully:", user);
+        console.log("Login successful, user:", user);
 
         if (!user) {
           console.error("No user data returned after login");
           throw new Error("No user data returned");
         }
 
-        console.log("Fetching user role for user ID:", user.id);
+        console.log("Fetching user role for ID:", user.id);
         
-        // Fetch user role
         const { data: roleData, error: rolesError } = await supabase
           .from('user_roles')
           .select('role')
@@ -53,9 +73,8 @@ export const useAuthForm = () => {
 
         console.log("User role data:", roleData);
 
-        // Check if user is admin and has the specific email
         if (email === 'cassecou100@gmail.com' && roleData?.role === 'admin') {
-          console.log("Admin user detected, redirecting to admin panel at /cassecou100");
+          console.log("Admin user detected, redirecting to admin panel");
           navigate('/cassecou100');
         } else {
           console.log("Regular user, redirecting to chat");
@@ -64,7 +83,7 @@ export const useAuthForm = () => {
 
         toast.success("Connexion réussie !");
       } else {
-        console.log("Attempting signup with email:", email);
+        console.log("Attempting signup...");
         
         const { error } = await supabase.auth.signUp({
           email,
@@ -75,12 +94,15 @@ export const useAuthForm = () => {
           console.error("Signup error:", error);
           throw error;
         }
+        
+        console.log("Signup successful");
         toast.success("Inscription réussie !");
         navigate("/chat");
       }
     } catch (error: any) {
-      console.error("Auth error:", error);
-      toast.error(error.message || "Une erreur est survenue");
+      console.error("Authentication error:", error);
+      const errorMessage = getErrorMessage(error);
+      toast.error(errorMessage);
     }
   };
 
