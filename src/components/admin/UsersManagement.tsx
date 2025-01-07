@@ -25,8 +25,19 @@ export const UsersManagement = () => {
   const { data: users, refetch } = useQuery({
     queryKey: ["adminUsers"],
     queryFn: async () => {
-      const { data: { users } } = await supabase.auth.admin.listUsers();
-      const { data: roles } = await supabase.from("user_roles").select("*");
+      const { data: { users }, error: usersError } = await supabase.auth.admin.listUsers();
+      
+      if (usersError) {
+        console.error("Error fetching users:", usersError);
+        return [];
+      }
+
+      const { data: roles, error: rolesError } = await supabase.from("user_roles").select("*");
+      
+      if (rolesError) {
+        console.error("Error fetching roles:", rolesError);
+        return [];
+      }
       
       return users?.map(user => ({
         ...user,
@@ -77,12 +88,15 @@ export const UsersManagement = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Gestion des utilisateurs</h2>
-        <Select value={selectedRole || ""} onValueChange={setSelectedRole}>
+        <Select 
+          value={selectedRole || "all"} 
+          onValueChange={(value) => setSelectedRole(value === "all" ? null : value)}
+        >
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Filtrer par rôle" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Tous</SelectItem>
+            <SelectItem value="all">Tous</SelectItem>
             <SelectItem value="admin">Admin</SelectItem>
             <SelectItem value="moderator">Modérateur</SelectItem>
             <SelectItem value="user">Utilisateur</SelectItem>
