@@ -18,13 +18,21 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { User } from "@supabase/supabase-js";
 
 type UserWithRole = {
   id: string;
   email: string | null;
   role: string;
   last_sign_in_at: string | null;
+}
+
+type UserRoleResponse = {
+  user_id: string;
+  role: string;
+  users: {
+    email: string | null;
+    last_sign_in_at: string | null;
+  } | null;
 }
 
 export const UsersManagement = () => {
@@ -35,7 +43,6 @@ export const UsersManagement = () => {
     queryFn: async () => {
       console.log("Fetching users and roles...");
       
-      // Get all users from user_roles table
       const { data: userRoles, error } = await supabase
         .from("user_roles")
         .select(`
@@ -45,7 +52,7 @@ export const UsersManagement = () => {
             email,
             last_sign_in_at
           )
-        `);
+        `) as { data: UserRoleResponse[] | null, error: any };
 
       if (error) {
         console.error("Error fetching users:", error);
