@@ -26,15 +26,6 @@ type UserWithRole = {
   last_sign_in_at: string | null;
 }
 
-type UserRoleResponse = {
-  user_id: string;
-  role: string;
-  users: {
-    email: string | null;
-    last_sign_in_at: string | null;
-  } | null;
-}
-
 export const UsersManagement = () => {
   const [selectedRole, setSelectedRole] = useState<string | null>(null);
 
@@ -43,36 +34,43 @@ export const UsersManagement = () => {
     queryFn: async () => {
       console.log("Fetching users and roles...");
       
-      const { data: userRoles, error } = await supabase
+      // First get all user roles
+      const { data: userRoles, error: rolesError } = await supabase
         .from("user_roles")
-        .select(`
-          user_id,
-          role,
-          users:user_id (
-            email,
-            last_sign_in_at
-          )
-        `) as { data: UserRoleResponse[] | null, error: any };
+        .select("user_id, role");
 
-      if (error) {
-        console.error("Error fetching users:", error);
-        throw error;
+      if (rolesError) {
+        console.error("Error fetching user roles:", rolesError);
+        throw rolesError;
       }
 
       if (!userRoles) {
         return [];
       }
 
-      // Transform the data into the expected format
-      const transformedUsers: UserWithRole[] = userRoles.map(userRole => ({
-        id: userRole.user_id,
-        email: userRole.users?.email || null,
-        role: userRole.role,
-        last_sign_in_at: userRole.users?.last_sign_in_at || null
-      }));
+      // Then get user details from auth.users using the service role client
+      const usersWithRoles: UserWithRole[] = [];
+      
+      for (const userRole of userRoles) {
+        const { data: userData, error: userError } = await supabase.auth.admin.getUserById(userRole.user_id);
+        
+        if (userError) {
+          console.error("Error fetching user:", userError);
+          continue;
+        }
 
-      console.log("Transformed users data:", transformedUsers);
-      return transformedUsers;
+        if (userData?.user) {
+          usersWithRoles.push({
+            id: userData.user.id,
+            email: userData.user.email,
+            role: userRole.role,
+            last_sign_in_at: userData.user.last_sign_in_at
+          });
+        }
+      }
+
+      console.log("Transformed users data:", usersWithRoles);
+      return usersWithRoles;
     },
   });
 
