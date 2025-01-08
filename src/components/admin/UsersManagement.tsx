@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { User } from "@supabase/supabase-js";
 
 type UserWithRole = {
   id: string;
@@ -52,7 +53,6 @@ export const UsersManagement = () => {
       }
 
       // Then get the user details from auth.users
-      const userIds = userRoles.map(ur => ur.user_id);
       const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
 
       if (authError) {
@@ -62,7 +62,7 @@ export const UsersManagement = () => {
 
       // Combine the data
       const transformedUsers = userRoles.map(userRole => {
-        const authUser = authUsers.users.find(u => u.id === userRole.user_id);
+        const authUser = (authUsers?.users || []).find(u => u.id === userRole.user_id);
         return {
           id: userRole.user_id,
           email: authUser?.email || null,
