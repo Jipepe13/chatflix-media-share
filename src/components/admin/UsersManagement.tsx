@@ -35,12 +35,16 @@ export const UsersManagement = () => {
     queryFn: async () => {
       console.log("Fetching users and roles...");
       
-      // First get all users from auth.users through user_roles
+      // Get all users from user_roles table
       const { data: userRoles, error } = await supabase
         .from("user_roles")
         .select(`
           user_id,
-          role
+          role,
+          users:user_id (
+            email,
+            last_sign_in_at
+          )
         `);
 
       if (error) {
@@ -52,24 +56,13 @@ export const UsersManagement = () => {
         return [];
       }
 
-      // Then get the user details from auth.users
-      const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
-
-      if (authError) {
-        console.error("Error fetching auth users:", authError);
-        throw authError;
-      }
-
-      // Combine the data
-      const transformedUsers = userRoles.map(userRole => {
-        const authUser = (authUsers?.users || []).find(u => u.id === userRole.user_id);
-        return {
-          id: userRole.user_id,
-          email: authUser?.email || null,
-          role: userRole.role,
-          last_sign_in_at: authUser?.last_sign_in_at || null
-        };
-      });
+      // Transform the data into the expected format
+      const transformedUsers: UserWithRole[] = userRoles.map(userRole => ({
+        id: userRole.user_id,
+        email: userRole.users?.email || null,
+        role: userRole.role,
+        last_sign_in_at: userRole.users?.last_sign_in_at || null
+      }));
 
       console.log("Transformed users data:", transformedUsers);
       return transformedUsers;
