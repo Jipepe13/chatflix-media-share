@@ -34,43 +34,28 @@ export const UsersManagement = () => {
     queryFn: async () => {
       console.log("Fetching users and roles...");
       
-      // First get all user roles
-      const { data: userRoles, error: rolesError } = await supabase
+      const { data: usersWithRoles, error } = await supabase
         .from("user_roles")
-        .select("user_id, role");
+        .select(`
+          user_id,
+          role,
+          profiles:user_id (
+            email,
+            last_sign_in_at
+          )
+        `);
 
-      if (rolesError) {
-        console.error("Error fetching user roles:", rolesError);
-        throw rolesError;
+      if (error) {
+        console.error("Error fetching users:", error);
+        throw error;
       }
 
-      if (!userRoles) {
-        return [];
-      }
-
-      // Then get user details from auth.users using the service role client
-      const usersWithRoles: UserWithRole[] = [];
-      
-      for (const userRole of userRoles) {
-        const { data: userData, error: userError } = await supabase.auth.admin.getUserById(userRole.user_id);
-        
-        if (userError) {
-          console.error("Error fetching user:", userError);
-          continue;
-        }
-
-        if (userData?.user) {
-          usersWithRoles.push({
-            id: userData.user.id,
-            email: userData.user.email,
-            role: userRole.role,
-            last_sign_in_at: userData.user.last_sign_in_at
-          });
-        }
-      }
-
-      console.log("Transformed users data:", usersWithRoles);
-      return usersWithRoles;
+      return usersWithRoles.map(user => ({
+        id: user.user_id,
+        email: user.profiles?.email,
+        role: user.role,
+        last_sign_in_at: user.profiles?.last_sign_in_at
+      })) as UserWithRole[];
     },
   });
 
