@@ -26,6 +26,15 @@ type UserWithRole = {
   last_sign_in_at: string | null;
 }
 
+type UserRoleJoinResult = {
+  user_id: string;
+  role: string;
+  profiles: {
+    email: string | null;
+    last_sign_in_at: string | null;
+  } | null;
+}
+
 export const UsersManagement = () => {
   const [selectedRole, setSelectedRole] = useState<string | null>(null);
 
@@ -39,7 +48,7 @@ export const UsersManagement = () => {
         .select(`
           user_id,
           role,
-          profiles:user_id (
+          profiles!user_roles_user_id_fkey (
             email,
             last_sign_in_at
           )
@@ -50,12 +59,12 @@ export const UsersManagement = () => {
         throw error;
       }
 
-      return usersWithRoles.map(user => ({
+      return (usersWithRoles as UserRoleJoinResult[]).map(user => ({
         id: user.user_id,
         email: user.profiles?.email,
         role: user.role,
         last_sign_in_at: user.profiles?.last_sign_in_at
-      })) as UserWithRole[];
+      }));
     },
   });
 
