@@ -26,6 +26,15 @@ type UserWithRole = {
   last_sign_in_at: string | null;
 }
 
+type UserRoleResponse = {
+  user_id: string;
+  role: string;
+  auth_user: {
+    email: string | null;
+    last_sign_in_at: string | null;
+  } | null;
+}
+
 export const UsersManagement = () => {
   const [selectedRole, setSelectedRole] = useState<string | null>(null);
 
@@ -43,7 +52,7 @@ export const UsersManagement = () => {
             email,
             last_sign_in_at
           )
-        `);
+        `) as { data: UserRoleResponse[] | null, error: any };
 
       if (error) {
         console.error("Error fetching users:", error);
