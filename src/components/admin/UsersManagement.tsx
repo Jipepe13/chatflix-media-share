@@ -26,15 +26,6 @@ type UserWithRole = {
   last_sign_in_at: string | null;
 }
 
-type UserRoleResponse = {
-  user_id: string;
-  role: string;
-  auth_user: {
-    email: string | null;
-    last_sign_in_at: string | null;
-  } | null;
-}
-
 export const UsersManagement = () => {
   const [selectedRole, setSelectedRole] = useState<string | null>(null);
 
@@ -43,16 +34,13 @@ export const UsersManagement = () => {
     queryFn: async () => {
       console.log("Fetching users and roles...");
       
+      // First get all users from auth.users through user_roles
       const { data: userRoles, error } = await supabase
         .from("user_roles")
         .select(`
           user_id,
-          role,
-          auth_user:user_id (
-            email,
-            last_sign_in_at
-          )
-        `) as { data: UserRoleResponse[] | null, error: any };
+          role
+        `);
 
       if (error) {
         console.error("Error fetching users:", error);
@@ -63,13 +51,25 @@ export const UsersManagement = () => {
         return [];
       }
 
-      // Transform the data to match the expected format
-      const transformedUsers = userRoles.map(user => ({
-        id: user.user_id,
-        email: user.auth_user?.email,
-        role: user.role,
-        last_sign_in_at: user.auth_user?.last_sign_in_at
-      }));
+      // Then get the user details from auth.users
+      const userIds = userRoles.map(ur => ur.user_id);
+      const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
+
+      if (authError) {
+        console.error("Error fetching auth users:", authError);
+        throw authError;
+      }
+
+      // Combine the data
+      const transformedUsers = userRoles.map(userRole => {
+        const authUser = authUsers.users.find(u => u.id === userRole.user_id);
+        return {
+          id: userRole.user_id,
+          email: authUser?.email || null,
+          role: userRole.role,
+          last_sign_in_at: authUser?.last_sign_in_at || null
+        };
+      });
 
       console.log("Transformed users data:", transformedUsers);
       return transformedUsers;
