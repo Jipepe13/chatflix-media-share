@@ -20,12 +20,10 @@ import {
 import { toast } from "sonner";
 
 type UserWithRole = {
-  user_id: string;
+  id: string;
+  email: string | null;
   role: string;
-  auth_user: {
-    email: string;
-    last_sign_in_at: string;
-  } | null;
+  last_sign_in_at: string | null;
 }
 
 export const UsersManagement = () => {
@@ -36,8 +34,7 @@ export const UsersManagement = () => {
     queryFn: async () => {
       console.log("Fetching users and roles...");
       
-      // Get all users from auth.users through user_roles table
-      const { data: users, error: usersError } = await supabase
+      const { data: userRoles, error } = await supabase
         .from("user_roles")
         .select(`
           user_id,
@@ -46,19 +43,19 @@ export const UsersManagement = () => {
             email,
             last_sign_in_at
           )
-        `) as { data: UserWithRole[] | null; error: any };
+        `);
 
-      if (usersError) {
-        console.error("Error fetching users:", usersError);
-        throw usersError;
+      if (error) {
+        console.error("Error fetching users:", error);
+        throw error;
       }
 
-      if (!users) {
+      if (!userRoles) {
         return [];
       }
 
       // Transform the data to match the expected format
-      const transformedUsers = users.map(user => ({
+      const transformedUsers = userRoles.map(user => ({
         id: user.user_id,
         email: user.auth_user?.email,
         role: user.role,
