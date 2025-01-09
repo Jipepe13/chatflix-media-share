@@ -48,18 +48,21 @@ export const UsersManagement = () => {
         .select(`
           user_id,
           role,
-          profiles!user_roles_user_id_fkey (
+          profiles (
             email,
             last_sign_in_at
           )
-        `);
+        `)
+        .returns<UserRoleJoinResult[]>();
 
       if (error) {
         console.error("Error fetching users:", error);
         throw error;
       }
 
-      return (usersWithRoles as UserRoleJoinResult[]).map(user => ({
+      console.log("Users with roles data:", usersWithRoles);
+
+      return usersWithRoles.map(user => ({
         id: user.user_id,
         email: user.profiles?.email,
         role: user.role,
