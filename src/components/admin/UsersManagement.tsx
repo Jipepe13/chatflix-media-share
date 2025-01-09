@@ -26,15 +26,6 @@ type UserWithRole = {
   last_sign_in_at: string | null;
 }
 
-type UserRoleJoinResult = {
-  user_id: string;
-  role: string;
-  profiles: {
-    email: string | null;
-    last_sign_in_at: string | null;
-  } | null;
-}
-
 export const UsersManagement = () => {
   const [selectedRole, setSelectedRole] = useState<string | null>(null);
 
@@ -43,31 +34,39 @@ export const UsersManagement = () => {
     queryFn: async () => {
       console.log("Fetching users and roles...");
       
-      const { data: usersWithRoles, error } = await supabase
+      // First, get all user roles
+      const { data: userRoles, error: rolesError } = await supabase
         .from("user_roles")
-        .select(`
-          user_id,
-          role,
-          profiles (
-            email,
-            last_sign_in_at
-          )
-        `)
-        .returns<UserRoleJoinResult[]>();
+        .select("user_id, role");
 
-      if (error) {
-        console.error("Error fetching users:", error);
-        throw error;
+      if (rolesError) {
+        console.error("Error fetching user roles:", rolesError);
+        throw rolesError;
       }
 
-      console.log("Users with roles data:", usersWithRoles);
+      // Then, get all profiles
+      const { data: profiles, error: profilesError } = await supabase
+        .from("profiles")
+        .select("id, email, last_sign_in_at");
 
-      return usersWithRoles.map(user => ({
-        id: user.user_id,
-        email: user.profiles?.email,
-        role: user.role,
-        last_sign_in_at: user.profiles?.last_sign_in_at
-      }));
+      if (profilesError) {
+        console.error("Error fetching profiles:", profilesError);
+        throw profilesError;
+      }
+
+      // Combine the data
+      const combinedData = userRoles.map(userRole => {
+        const profile = profiles.find(p => p.id === userRole.user_id);
+        return {
+          id: userRole.user_id,
+          email: profile?.email,
+          role: userRole.role,
+          last_sign_in_at: profile?.last_sign_in_at
+        };
+      });
+
+      console.log("Combined user data:", combinedData);
+      return combinedData;
     },
   });
 
