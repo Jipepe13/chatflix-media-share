@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
 
-type User = {
+type Profile = {
   created_at: string;
 };
 
@@ -36,10 +36,20 @@ export const Statistics = () => {
   const { data: newUsers } = useQuery<UsersByDay>({
     queryKey: ["newUsers"],
     queryFn: async () => {
-      const { data: { users } } = await supabase.auth.admin.listUsers();
+      console.log("Fetching profiles for statistics...");
+      const { data: profiles, error } = await supabase
+        .from("profiles")
+        .select("created_at");
+
+      if (error) {
+        console.error("Error fetching profiles:", error);
+        throw error;
+      }
+
+      console.log("Profiles data:", profiles);
       
-      const usersByDay = (users || []).reduce<UsersByDay>((acc, user: User) => {
-        const date = new Date(user.created_at).toLocaleDateString();
+      const usersByDay = (profiles || []).reduce<UsersByDay>((acc, profile: Profile) => {
+        const date = new Date(profile.created_at).toLocaleDateString();
         const existingDay = acc.find(d => d.date === date);
         
         if (existingDay) {
@@ -51,7 +61,10 @@ export const Statistics = () => {
         return acc;
       }, []);
 
-      return usersByDay;
+      // Sort by date and limit to last 7 days
+      return usersByDay
+        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+        .slice(-7);
     },
   });
 
