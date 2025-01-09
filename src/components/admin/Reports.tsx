@@ -20,37 +20,46 @@ type Report = {
   } | null;
 };
 
-type SupabaseUser = {
-  email: string;
-}
-
 export const Reports = () => {
   const { data: reports, refetch } = useQuery({
     queryKey: ["reports"],
     queryFn: async () => {
       console.log("Fetching reports...");
-      const { data, error } = await supabase
+      
+      // First, get all reports
+      const { data: reportsData, error: reportsError } = await supabase
         .from("user_reports")
-        .select(`
-          *,
-          reported_user:reported_user_id(email),
-          reporter:reporter_id(email)
-        `)
+        .select("*")
         .order("created_at", { ascending: false });
 
-      if (error) {
-        console.error("Error fetching reports:", error);
-        throw error;
+      if (reportsError) {
+        console.error("Error fetching reports:", reportsError);
+        throw reportsError;
       }
 
-      console.log("Reports data:", data);
-      
-      const transformedData = data?.map(report => ({
-        ...report,
-        reported_user: report.reported_user ? { email: (report.reported_user as unknown as SupabaseUser).email } : null,
-        reporter: report.reporter ? { email: (report.reporter as unknown as SupabaseUser).email } : null
-      })) || [];
+      // Then, get all profiles
+      const { data: profiles, error: profilesError } = await supabase
+        .from("profiles")
+        .select("id, email");
 
+      if (profilesError) {
+        console.error("Error fetching profiles:", profilesError);
+        throw profilesError;
+      }
+
+      // Combine the data
+      const transformedData = reportsData.map(report => {
+        const reportedUser = profiles.find(p => p.id === report.reported_user_id);
+        const reporter = profiles.find(p => p.id === report.reporter_id);
+
+        return {
+          ...report,
+          reported_user: reportedUser ? { email: reportedUser.email } : null,
+          reporter: reporter ? { email: reporter.email } : null
+        };
+      });
+
+      console.log("Combined reports data:", transformedData);
       return transformedData as Report[];
     },
   });
