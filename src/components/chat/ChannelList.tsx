@@ -1,10 +1,20 @@
 import { Channel, User } from "@/types/chat";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Hash, ChevronDown, ChevronRight } from "lucide-react";
+import { Plus, Hash, ChevronDown, ChevronRight, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface ChannelListProps {
   selectedChannel: Channel | null | undefined;
@@ -37,6 +47,7 @@ export const ChannelList = ({ selectedChannel, onSelectChannel, onSelectUser }: 
   const [newChannelName, setNewChannelName] = useState("");
   const [isCreatingChannel, setIsCreatingChannel] = useState(false);
   const [expandedChannels, setExpandedChannels] = useState<string[]>(["1", "2"]);
+  const [channelToDelete, setChannelToDelete] = useState<Channel | null>(null);
   const { toast } = useToast();
 
   const handleCreateChannel = () => {
@@ -55,6 +66,32 @@ export const ChannelList = ({ selectedChannel, onSelectChannel, onSelectUser }: 
         title: "Salon créé",
         description: `Le salon #${newChannel.name} a été créé avec succès.`
       });
+    }
+  };
+
+  const handleDeleteChannel = (channel: Channel) => {
+    if (channel.createdBy === "system") {
+      toast({
+        title: "Action non autorisée",
+        description: "Les salons système ne peuvent pas être supprimés.",
+        variant: "destructive"
+      });
+      return;
+    }
+    setChannelToDelete(channel);
+  };
+
+  const confirmDeleteChannel = () => {
+    if (channelToDelete) {
+      setChannels(channels.filter(c => c.id !== channelToDelete.id));
+      if (selectedChannel?.id === channelToDelete.id) {
+        onSelectChannel(null);
+      }
+      toast({
+        title: "Salon supprimé",
+        description: `Le salon #${channelToDelete.name} a été supprimé.`
+      });
+      setChannelToDelete(null);
     }
   };
 
@@ -98,7 +135,7 @@ export const ChannelList = ({ selectedChannel, onSelectChannel, onSelectUser }: 
         <div key={channel.id} className="space-y-0.5">
           <div
             className={cn(
-              "flex items-center space-x-1 p-1 rounded-lg hover:bg-muted cursor-pointer text-xs",
+              "flex items-center space-x-1 p-1 rounded-lg hover:bg-muted cursor-pointer text-xs group",
               selectedChannel?.id === channel.id && "bg-muted"
             )}
           >
@@ -127,6 +164,19 @@ export const ChannelList = ({ selectedChannel, onSelectChannel, onSelectUser }: 
                 ({channel.connectedUsers?.length || 0})
               </span>
             </div>
+            {channel.createdBy !== "system" && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-4 w-4 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDeleteChannel(channel);
+                }}
+              >
+                <Trash2 className="h-3 w-3 text-destructive" />
+              </Button>
+            )}
           </div>
           
           {expandedChannels.includes(channel.id) && channel.connectedUsers && (
@@ -141,6 +191,23 @@ export const ChannelList = ({ selectedChannel, onSelectChannel, onSelectUser }: 
           )}
         </div>
       ))}
+
+      <AlertDialog open={!!channelToDelete} onOpenChange={() => setChannelToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
+            <AlertDialogDescription>
+              Êtes-vous sûr de vouloir supprimer le salon #{channelToDelete?.name} ? Cette action est irréversible.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDeleteChannel} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
