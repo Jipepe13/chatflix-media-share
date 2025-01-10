@@ -1,20 +1,11 @@
 import { Channel, User } from "@/types/chat";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Plus, Hash, ChevronDown, ChevronRight, Trash2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
-import { cn } from "@/lib/utils";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { CreateChannelForm } from "./CreateChannelForm";
+import { DeleteChannelDialog } from "./DeleteChannelDialog";
+import { ChannelItem } from "./ChannelItem";
 
 interface ChannelListProps {
   selectedChannel: Channel | null | undefined;
@@ -44,29 +35,25 @@ export const ChannelList = ({ selectedChannel, onSelectChannel, onSelectUser }: 
       ]
     },
   ]);
-  const [newChannelName, setNewChannelName] = useState("");
   const [isCreatingChannel, setIsCreatingChannel] = useState(false);
   const [expandedChannels, setExpandedChannels] = useState<string[]>(["1", "2"]);
   const [channelToDelete, setChannelToDelete] = useState<Channel | null>(null);
   const { toast } = useToast();
 
-  const handleCreateChannel = () => {
-    if (newChannelName.trim()) {
-      const newChannel: Channel = {
-        id: Date.now().toString(),
-        name: newChannelName.trim().toLowerCase(),
-        createdAt: new Date(),
-        createdBy: "currentUser",
-        connectedUsers: []
-      };
-      setChannels([...channels, newChannel]);
-      setNewChannelName("");
-      setIsCreatingChannel(false);
-      toast({
-        title: "Salon créé",
-        description: `Le salon #${newChannel.name} a été créé avec succès.`
-      });
-    }
+  const handleCreateChannel = (name: string) => {
+    const newChannel: Channel = {
+      id: Date.now().toString(),
+      name,
+      createdAt: new Date(),
+      createdBy: "currentUser",
+      connectedUsers: []
+    };
+    setChannels([...channels, newChannel]);
+    setIsCreatingChannel(false);
+    toast({
+      title: "Salon créé",
+      description: `Le salon #${newChannel.name} a été créé avec succès.`
+    });
   };
 
   const handleDeleteChannel = (channel: Channel) => {
@@ -118,96 +105,34 @@ export const ChannelList = ({ selectedChannel, onSelectChannel, onSelectUser }: 
       </div>
       
       {isCreatingChannel && (
-        <div className="flex gap-1">
-          <Input
-            value={newChannelName}
-            onChange={(e) => setNewChannelName(e.target.value)}
-            placeholder="nom-du-salon"
-            className="text-xs h-6"
-          />
-          <Button size="sm" className="h-6 text-xs px-2" onClick={handleCreateChannel}>
-            Créer
-          </Button>
-        </div>
+        <CreateChannelForm
+          onChannelCreated={handleCreateChannel}
+          onCancel={() => setIsCreatingChannel(false)}
+        />
       )}
 
       {channels.map((channel) => (
-        <div key={channel.id} className="space-y-0.5">
-          <div
-            className={cn(
-              "flex items-center space-x-1 p-1 rounded-lg hover:bg-muted cursor-pointer text-xs group",
-              selectedChannel?.id === channel.id && "bg-muted"
-            )}
-          >
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-4 w-4 p-0"
-              onClick={() => toggleChannelExpand(channel.id)}
-            >
-              {expandedChannels.includes(channel.id) ? (
-                <ChevronDown className="h-3 w-3" />
-              ) : (
-                <ChevronRight className="h-3 w-3" />
-              )}
-            </Button>
-            <div 
-              className="flex items-center flex-1"
-              onClick={() => {
-                onSelectChannel(channel);
-                onSelectUser(null);
-              }}
-            >
-              <Hash className="h-3 w-3" />
-              <span>{channel.name}</span>
-              <span className="ml-1 text-muted-foreground">
-                ({channel.connectedUsers?.length || 0})
-              </span>
-            </div>
-            {channel.createdBy !== "system" && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-4 w-4 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDeleteChannel(channel);
-                }}
-              >
-                <Trash2 className="h-3 w-3 text-destructive" />
-              </Button>
-            )}
-          </div>
-          
-          {expandedChannels.includes(channel.id) && channel.connectedUsers && (
-            <div className="ml-6 space-y-0.5">
-              {channel.connectedUsers.map((user) => (
-                <div key={user.id} className="flex items-center space-x-1 text-xs text-muted-foreground">
-                  <span className="w-2 h-2 rounded-full bg-green-500"></span>
-                  <span>{user.username}</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        <ChannelItem
+          key={channel.id}
+          channel={channel}
+          isSelected={selectedChannel?.id === channel.id}
+          isExpanded={expandedChannels.includes(channel.id)}
+          onSelect={() => {
+            onSelectChannel(channel);
+            onSelectUser(null);
+          }}
+          onToggleExpand={() => toggleChannelExpand(channel.id)}
+          onDelete={() => handleDeleteChannel(channel)}
+        />
       ))}
 
-      <AlertDialog open={!!channelToDelete} onOpenChange={() => setChannelToDelete(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
-            <AlertDialogDescription>
-              Êtes-vous sûr de vouloir supprimer le salon #{channelToDelete?.name} ? Cette action est irréversible.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDeleteChannel} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Supprimer
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {channelToDelete && (
+        <DeleteChannelDialog
+          channel={channelToDelete}
+          onConfirm={confirmDeleteChannel}
+          onCancel={() => setChannelToDelete(null)}
+        />
+      )}
     </div>
   );
 };
