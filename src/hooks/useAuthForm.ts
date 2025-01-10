@@ -34,22 +34,16 @@ export const useAuthForm = () => {
     try {
       console.log("Checking user role for ID:", userId);
       
-      // Use single() instead of maybeSingle() to get better error handling
       const { data, error } = await supabase
         .from('user_roles')
         .select('role')
         .eq('user_id', userId)
-        .limit(1)
-        .single();
+        .maybeSingle();
 
       if (error) {
-        if (error.code === 'PGRST116') {
-          // No role found
-          console.log("No role found for user");
-          return null;
-        }
         console.error("Error checking user role:", error);
-        throw error;
+        // Don't throw the error, just return null to allow the login flow to continue
+        return null;
       }
 
       console.log("User role data:", data);
@@ -110,7 +104,7 @@ export const useAuthForm = () => {
       } else {
         console.log("Attempting signup...");
         
-        const { error } = await supabase.auth.signUp({
+        const { data: { user }, error } = await supabase.auth.signUp({
           email,
           password,
         });
@@ -118,6 +112,19 @@ export const useAuthForm = () => {
         if (error) {
           console.error("Signup error:", error);
           throw error;
+        }
+
+        if (user) {
+          // Insert default user role after signup
+          const { error: roleError } = await supabase
+            .from('user_roles')
+            .insert([
+              { user_id: user.id, role: 'user' }
+            ]);
+
+          if (roleError) {
+            console.error("Error setting default role:", roleError);
+          }
         }
         
         console.log("Signup successful");
