@@ -34,24 +34,36 @@ export const useAuthForm = () => {
     try {
       console.log("Checking user role for ID:", userId);
       
-      const { data, error } = await supabase
+      const { data: roleData, error: roleError } = await supabase
         .from('user_roles')
         .select('role')
         .eq('user_id', userId)
-        .maybeSingle();
+        .single();
 
-      if (error) {
-        console.error("Error checking user role:", error);
-        // Don't throw the error, just return null to allow the login flow to continue
+      if (roleError) {
+        console.error("Error checking user role:", roleError);
         return null;
       }
 
-      console.log("User role data:", data);
-      return data?.role || null;
+      console.log("User role data:", roleData);
+      return roleData?.role || null;
     } catch (error) {
       console.error("Error in checkUserRole:", error);
-      // Don't throw the error, just return null to allow the login flow to continue
       return null;
+    }
+  };
+
+  const setDefaultUserRole = async (userId: string) => {
+    try {
+      const { error } = await supabase
+        .from('user_roles')
+        .insert([{ user_id: userId, role: 'user' }]);
+
+      if (error) {
+        console.error("Error setting default role:", error);
+      }
+    } catch (error) {
+      console.error("Error in setDefaultUserRole:", error);
     }
   };
 
@@ -91,7 +103,6 @@ export const useAuthForm = () => {
           console.error("Error checking role, continuing with login:", roleError);
         }
 
-        // Even if role check fails, allow login to proceed
         if (email === 'cassecou100@gmail.com' && userRole === 'admin') {
           console.log("Admin user detected, redirecting to admin panel");
           navigate('/cassecou100');
@@ -115,16 +126,8 @@ export const useAuthForm = () => {
         }
 
         if (user) {
-          // Insert default user role after signup
-          const { error: roleError } = await supabase
-            .from('user_roles')
-            .insert([
-              { user_id: user.id, role: 'user' }
-            ]);
-
-          if (roleError) {
-            console.error("Error setting default role:", roleError);
-          }
+          await setDefaultUserRole(user.id);
+          console.log("Default role set for new user");
         }
         
         console.log("Signup successful");
