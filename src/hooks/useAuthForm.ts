@@ -38,7 +38,7 @@ export const useAuthForm = () => {
         .from('user_roles')
         .select('role')
         .eq('user_id', userId)
-        .single();
+        .maybeSingle();
 
       if (roleError) {
         console.error("Error checking user role:", roleError);
@@ -61,9 +61,11 @@ export const useAuthForm = () => {
 
       if (error) {
         console.error("Error setting default role:", error);
+        throw error;
       }
     } catch (error) {
       console.error("Error in setDefaultUserRole:", error);
+      throw error;
     }
   };
 
@@ -88,21 +90,24 @@ export const useAuthForm = () => {
           throw error;
         }
 
-        console.log("Login successful, user:", user);
-
         if (!user) {
           console.error("No user data returned after login");
           throw new Error("No user data returned");
         }
+
+        console.log("Login successful, user:", user);
 
         let userRole = null;
         try {
           userRole = await checkUserRole(user.id);
           console.log("User role:", userRole);
         } catch (roleError) {
-          console.error("Error checking role, continuing with login:", roleError);
+          console.error("Error checking role:", roleError);
+          // Continue with login even if role check fails
+          userRole = null;
         }
 
+        // Specific routing for admin
         if (email === 'cassecou100@gmail.com' && userRole === 'admin') {
           console.log("Admin user detected, redirecting to admin panel");
           navigate('/cassecou100');
@@ -126,8 +131,13 @@ export const useAuthForm = () => {
         }
 
         if (user) {
-          await setDefaultUserRole(user.id);
-          console.log("Default role set for new user");
+          try {
+            await setDefaultUserRole(user.id);
+            console.log("Default role set for new user");
+          } catch (roleError) {
+            console.error("Error setting default role:", roleError);
+            // Continue with signup even if role setting fails
+          }
         }
         
         console.log("Signup successful");
