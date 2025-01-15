@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Message, User, Channel } from "@/types/chat";
 import { ChatSidebar } from "./ChatSidebar";
 import { MessageList } from "./MessageList";
 import { MessageInput } from "./MessageInput";
 import { VideoCall } from "./VideoCall";
-import { useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 export const ChatContainer = () => {
   const currentUser: User = {
@@ -41,17 +41,54 @@ export const ChatContainer = () => {
   const [isVideoCallActive, setIsVideoCallActive] = useState(false);
   const [newMessage, setNewMessage] = useState("");
 
-  // Add current user to channel's connected users when mounting
   useEffect(() => {
     if (selectedChannel) {
-      const updatedChannel = {
-        ...selectedChannel,
-        connectedUsers: [...(selectedChannel.connectedUsers || []), currentUser]
+      // Subscribe to the channel's presence
+      const channel = supabase.channel(`room_${selectedChannel.id}`, {
+        config: {
+          presence: {
+            key: currentUser.id,
+          },
+        },
+      });
+
+      channel
+        .on('presence', { event: 'sync' }, () => {
+          console.log('Presence sync:', channel.presenceState());
+          const presences = channel.presenceState();
+          const connectedUsers = Object.values(presences).flat().map((presence: any) => ({
+            id: presence.user_id,
+            username: presence.username,
+            isOnline: true
+          }));
+          
+          setSelectedChannel(prev => prev ? {
+            ...prev,
+            connectedUsers
+          } : null);
+        })
+        .on('presence', { event: 'join' }, ({ key, newPresences }) => {
+          console.log('User joined:', key, newPresences);
+        })
+        .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
+          console.log('User left:', key, leftPresences);
+        })
+        .subscribe(async (status) => {
+          if (status === 'SUBSCRIBED') {
+            const presenceTrackStatus = await channel.track({
+              user_id: currentUser.id,
+              username: currentUser.username,
+              online_at: new Date().toISOString(),
+            });
+            console.log('Presence tracked:', presenceTrackStatus);
+          }
+        });
+
+      return () => {
+        channel.unsubscribe();
       };
-      setSelectedChannel(updatedChannel);
-      console.log("Current user added to channel:", updatedChannel);
     }
-  }, []);
+  }, [selectedChannel?.id]);
 
   const handleSendMessage = (content: string) => {
     const newMessage: Message = {
@@ -80,7 +117,6 @@ export const ChatContainer = () => {
   const handleSelectChannel = (channel: Channel | null) => {
     console.log("Selecting channel:", channel);
     setSelectedChannel(channel);
-    // Reset messages when changing channel (in a real app, you'd fetch channel messages)
     setMessages([
       {
         id: Date.now().toString(),
