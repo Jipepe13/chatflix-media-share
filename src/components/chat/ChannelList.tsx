@@ -20,19 +20,14 @@ export const ChannelList = ({ selectedChannel, onSelectChannel, onSelectUser }: 
       name: "général", 
       createdAt: new Date(), 
       createdBy: "system",
-      connectedUsers: [
-        { id: "1", username: "Alice", isOnline: true },
-        { id: "2", username: "Bob", isOnline: true },
-      ]
+      connectedUsers: []
     },
     { 
       id: "2", 
       name: "aide", 
       createdAt: new Date(), 
       createdBy: "system",
-      connectedUsers: [
-        { id: "3", username: "Charlie", isOnline: true },
-      ]
+      connectedUsers: []
     },
   ]);
   const [isCreatingChannel, setIsCreatingChannel] = useState(false);
