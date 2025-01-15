@@ -30,11 +30,6 @@ export const ChatContainer = () => {
       timestamp: new Date(),
       createdAt: new Date(),
       createdBy: "system",
-      connectedUsers: [
-        currentUser,
-        { id: "1", username: "Alice", isOnline: true },
-        { id: "2", username: "Bob", isOnline: true },
-      ]
     }
   ]);
 
@@ -43,7 +38,8 @@ export const ChatContainer = () => {
 
   useEffect(() => {
     if (selectedChannel) {
-      // Subscribe to the channel's presence
+      console.log("Initializing channel presence for:", selectedChannel.name);
+      
       const channel = supabase.channel(`room_${selectedChannel.id}`, {
         config: {
           presence: {
@@ -56,16 +52,27 @@ export const ChatContainer = () => {
         .on('presence', { event: 'sync' }, () => {
           console.log('Presence sync:', channel.presenceState());
           const presences = channel.presenceState();
-          const connectedUsers = Object.values(presences).flat().map((presence: any) => ({
-            id: presence.user_id,
-            username: presence.username,
-            isOnline: true
-          }));
           
-          setSelectedChannel(prev => prev ? {
-            ...prev,
-            connectedUsers
-          } : null);
+          // Transform presences into User array
+          const connectedUsers = Object.values(presences)
+            .flat()
+            .map((presence: any) => ({
+              id: presence.user_id,
+              username: presence.username,
+              isOnline: true
+            }));
+          
+          console.log('Connected users after sync:', connectedUsers);
+          
+          setSelectedChannel(prev => {
+            if (!prev) return null;
+            const updatedChannel = {
+              ...prev,
+              connectedUsers: [...connectedUsers]
+            };
+            console.log('Updated channel state:', updatedChannel);
+            return updatedChannel;
+          });
         })
         .on('presence', { event: 'join' }, ({ key, newPresences }) => {
           console.log('User joined:', key, newPresences);
@@ -75,6 +82,7 @@ export const ChatContainer = () => {
         })
         .subscribe(async (status) => {
           if (status === 'SUBSCRIBED') {
+            console.log('Channel subscribed, tracking presence...');
             const presenceTrackStatus = await channel.track({
               user_id: currentUser.id,
               username: currentUser.username,
@@ -85,6 +93,7 @@ export const ChatContainer = () => {
         });
 
       return () => {
+        console.log('Cleaning up channel subscription');
         channel.unsubscribe();
       };
     }
