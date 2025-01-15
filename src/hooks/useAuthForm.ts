@@ -38,17 +38,10 @@ export const useAuthForm = () => {
         .from('user_roles')
         .select('role')
         .eq('user_id', userId)
-        .limit(1)
-        .single();
+        .maybeSingle();
 
       if (roleError) {
         console.error("Error checking user role:", roleError);
-        // Si l'erreur est due à l'absence de rôle, on retourne null au lieu de throw
-        if (roleError.code === 'PGRST116') {
-          return null;
-        }
-        // Pour les autres erreurs, on continue aussi mais on log
-        console.warn("Non-critical role check error:", roleError);
         return null;
       }
 
@@ -62,13 +55,6 @@ export const useAuthForm = () => {
 
   const setDefaultUserRole = async (userId: string) => {
     try {
-      // Vérifions d'abord si un rôle existe déjà
-      const existingRole = await checkUserRole(userId);
-      if (existingRole) {
-        console.log("User already has role:", existingRole);
-        return;
-      }
-
       console.log("Setting default role for user:", userId);
       const { error } = await supabase
         .from('user_roles')
@@ -76,14 +62,12 @@ export const useAuthForm = () => {
 
       if (error) {
         console.error("Error setting default role:", error);
-        // On ne throw pas l'erreur, on continue le flux
         console.warn("Non-critical error setting default role");
       } else {
         console.log("Default role set successfully");
       }
     } catch (error) {
       console.error("Error in setDefaultUserRole:", error);
-      // On ne throw pas l'erreur, on continue le flux
       console.warn("Non-critical error in setDefaultUserRole");
     }
   };
@@ -116,22 +100,16 @@ export const useAuthForm = () => {
 
         console.log("Login successful, user:", user);
 
-        let userRole = null;
-        try {
-          userRole = await checkUserRole(user.id);
-          if (!userRole) {
-            console.log("No role found, setting default role");
-            await setDefaultUserRole(user.id);
-            userRole = 'user';
-          }
-          console.log("Final user role:", userRole);
-        } catch (roleError) {
-          console.error("Error handling role:", roleError);
-          // Continue with login even if role handling fails
+        let userRole = await checkUserRole(user.id);
+        
+        if (!userRole) {
+          console.log("No role found, setting default role");
+          await setDefaultUserRole(user.id);
           userRole = 'user';
         }
+        
+        console.log("Final user role:", userRole);
 
-        // Specific routing for admin
         if (email === 'cassecou100@gmail.com' && userRole === 'admin') {
           console.log("Admin user detected, redirecting to admin panel");
           navigate('/cassecou100');
@@ -155,13 +133,7 @@ export const useAuthForm = () => {
         }
 
         if (user) {
-          try {
-            await setDefaultUserRole(user.id);
-            console.log("Default role set for new user");
-          } catch (roleError) {
-            console.error("Error setting default role:", roleError);
-            // Continue with signup even if role setting fails
-          }
+          await setDefaultUserRole(user.id);
         }
         
         console.log("Signup successful");
