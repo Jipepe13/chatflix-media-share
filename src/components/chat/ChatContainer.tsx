@@ -53,19 +53,21 @@ export const ChatContainer = () => {
           console.log('Presence sync:', channel.presenceState());
           const presences = channel.presenceState();
           
-          // Transform presences into User array and include current user
-          const connectedUsers = Object.values(presences)
+          // Always start with current user
+          const connectedUsers = [currentUser];
+          
+          // Add other users from presences
+          Object.values(presences)
             .flat()
-            .map((presence: any) => ({
-              id: presence.user_id,
-              username: presence.username,
-              isOnline: true
-            }));
-
-          // Add current user if not already in the list
-          if (!connectedUsers.some(user => user.id === currentUser.id)) {
-            connectedUsers.unshift(currentUser);
-          }
+            .forEach((presence: any) => {
+              if (presence.user_id !== currentUser.id) {
+                connectedUsers.push({
+                  id: presence.user_id,
+                  username: presence.username,
+                  isOnline: true
+                });
+              }
+            });
           
           console.log('Connected users after sync:', connectedUsers);
           
@@ -88,15 +90,11 @@ export const ChatContainer = () => {
               isOnline: true
             };
             
-            if (!prev.connectedUsers.some(user => user.id === newConnectedUser.id)) {
-              const updatedUsers = [...prev.connectedUsers];
-              if (!updatedUsers.some(user => user.id === currentUser.id)) {
-                updatedUsers.unshift(currentUser);
-              }
-              updatedUsers.push(newConnectedUser);
+            if (newConnectedUser.id !== currentUser.id && 
+                !prev.connectedUsers.some(user => user.id === newConnectedUser.id)) {
               return {
                 ...prev,
-                connectedUsers: updatedUsers
+                connectedUsers: [...prev.connectedUsers, newConnectedUser]
               };
             }
             return prev;
@@ -106,16 +104,15 @@ export const ChatContainer = () => {
           console.log('User left:', key, leftPresences);
           setSelectedChannel(prev => {
             if (!prev || !prev.connectedUsers) return prev;
-            const updatedUsers = prev.connectedUsers.filter(
-              user => !leftPresences.some((presence: any) => presence.user_id === user.id)
-            );
-            // Make sure current user is still in the list
-            if (!updatedUsers.some(user => user.id === currentUser.id)) {
-              updatedUsers.unshift(currentUser);
-            }
             return {
               ...prev,
-              connectedUsers: updatedUsers
+              connectedUsers: [
+                currentUser,
+                ...prev.connectedUsers.filter(user => 
+                  user.id !== currentUser.id && 
+                  !leftPresences.some((presence: any) => presence.user_id === user.id)
+                )
+              ]
             };
           });
         })
@@ -167,7 +164,7 @@ export const ChatContainer = () => {
     if (channel) {
       setSelectedChannel({
         ...channel,
-        connectedUsers: [currentUser] // Always initialize with current user
+        connectedUsers: [currentUser]
       });
     } else {
       setSelectedChannel(null);
