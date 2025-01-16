@@ -86,10 +86,15 @@ export const ChatContainer = () => {
               username: newUser.username,
               isOnline: true
             };
-            return {
-              ...prev,
-              connectedUsers: [...prev.connectedUsers, newConnectedUser]
-            };
+            
+            // Check if user already exists to avoid duplicates
+            if (!prev.connectedUsers.some(user => user.id === newConnectedUser.id)) {
+              return {
+                ...prev,
+                connectedUsers: [...prev.connectedUsers, newConnectedUser]
+              };
+            }
+            return prev;
           });
         })
         .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
