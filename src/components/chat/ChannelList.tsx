@@ -14,20 +14,26 @@ interface ChannelListProps {
 }
 
 export const ChannelList = ({ selectedChannel, onSelectChannel, onSelectUser }: ChannelListProps) => {
+  const mockUsers: User[] = [
+    { id: "1", username: "Alice", isOnline: true },
+    { id: "2", username: "Bob", isOnline: true },
+    { id: "3", username: "Charlie", isOnline: true },
+  ];
+
   const [channels, setChannels] = useState<Channel[]>([
     { 
       id: "1", 
       name: "général", 
       createdAt: new Date(), 
       createdBy: "system",
-      connectedUsers: []
+      connectedUsers: mockUsers
     },
     { 
       id: "2", 
       name: "aide", 
       createdAt: new Date(), 
       createdBy: "system",
-      connectedUsers: []
+      connectedUsers: mockUsers
     },
   ]);
   const [isCreatingChannel, setIsCreatingChannel] = useState(false);
@@ -41,7 +47,7 @@ export const ChannelList = ({ selectedChannel, onSelectChannel, onSelectUser }: 
       name,
       createdAt: new Date(),
       createdBy: "currentUser",
-      connectedUsers: []
+      connectedUsers: mockUsers
     };
     setChannels([...channels, newChannel]);
     setIsCreatingChannel(false);
