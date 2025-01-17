@@ -19,7 +19,7 @@ export const ChatContainer = () => {
     name: "général",
     createdAt: new Date(),
     createdBy: "system",
-    connectedUsers: []  // Initialize empty and let presence handle it
+    connectedUsers: [currentUser]  // Initialize with current user
   });
 
   const [messages, setMessages] = useState<Message[]>([
@@ -53,7 +53,7 @@ export const ChatContainer = () => {
           console.log('Presence sync:', channel.presenceState());
           const presences = channel.presenceState();
           
-          // Initialize with current user
+          // Always start with current user
           const connectedUsers = [currentUser];
           
           // Add other users from presences
@@ -81,15 +81,14 @@ export const ChatContainer = () => {
         })
         .on('presence', { event: 'join' }, ({ key, newPresences }) => {
           console.log('User joined:', key, newPresences);
-          const newUser = newPresences[0];
-          const newConnectedUser = {
-            id: newUser.user_id,
-            username: newUser.username,
-            isOnline: true
-          };
-          
           setSelectedChannel(prev => {
             if (!prev || !prev.connectedUsers) return prev;
+            const newUser = newPresences[0];
+            const newConnectedUser = {
+              id: newUser.user_id,
+              username: newUser.username,
+              isOnline: true
+            };
             
             // Don't add if it's the current user or if user already exists
             if (newConnectedUser.id !== currentUser.id && 
@@ -108,13 +107,10 @@ export const ChatContainer = () => {
             if (!prev || !prev.connectedUsers) return prev;
             return {
               ...prev,
-              connectedUsers: [
-                currentUser,
-                ...prev.connectedUsers.filter(user => 
-                  user.id !== currentUser.id && 
-                  !leftPresences.some((presence: any) => presence.user_id === user.id)
-                )
-              ]
+              connectedUsers: prev.connectedUsers.filter(user => 
+                user.id === currentUser.id || 
+                !leftPresences.some((presence: any) => presence.user_id === user.id)
+              )
             };
           });
         })
@@ -165,7 +161,7 @@ export const ChatContainer = () => {
     if (channel) {
       setSelectedChannel({
         ...channel,
-        connectedUsers: [currentUser]  // Initialize with current user
+        connectedUsers: [currentUser]  // Always start with current user
       });
     } else {
       setSelectedChannel(null);
