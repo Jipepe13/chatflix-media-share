@@ -19,7 +19,7 @@ export const ChatContainer = () => {
     name: "général",
     createdAt: new Date(),
     createdBy: "system",
-    connectedUsers: [currentUser]  // Initialize with current user
+    connectedUsers: [currentUser]
   });
 
   const [messages, setMessages] = useState<Message[]>([
@@ -52,34 +52,36 @@ export const ChatContainer = () => {
         .on('presence', { event: 'sync' }, () => {
           console.log('Presence sync:', channel.presenceState());
           
-          // Always start with current user
-          const connectedUsers = [currentUser];
+          // Initialize with current user
+          const users = [currentUser];
           
           // Add other users from presences
-          Object.values(channel.presenceState())
-            .flat()
-            .forEach((presence: any) => {
-              if (presence.user_id !== currentUser.id) {
-                connectedUsers.push({
-                  id: presence.user_id,
-                  username: presence.username,
-                  isOnline: true
-                });
-              }
-            });
+          const presences = Object.values(channel.presenceState()).flat();
+          console.log('Raw presences:', presences);
           
-          console.log('Connected users after sync:', connectedUsers);
+          presences.forEach((presence: any) => {
+            if (presence.user_id !== currentUser.id) {
+              users.push({
+                id: presence.user_id,
+                username: presence.username,
+                isOnline: true
+              });
+            }
+          });
+          
+          console.log('Final connected users:', users);
           
           setSelectedChannel(prev => {
             if (!prev) return null;
             return {
               ...prev,
-              connectedUsers
+              connectedUsers: users
             };
           });
         })
         .on('presence', { event: 'join' }, ({ key, newPresences }) => {
           console.log('User joined:', key, newPresences);
+          
           setSelectedChannel(prev => {
             if (!prev || !prev.connectedUsers) return prev;
             
@@ -90,9 +92,11 @@ export const ChatContainer = () => {
               isOnline: true
             };
             
-            // Don't add if it's the current user or if user already exists
-            if (newConnectedUser.id !== currentUser.id && 
-                !prev.connectedUsers.some(user => user.id === newConnectedUser.id)) {
+            // Check if user already exists
+            const userExists = prev.connectedUsers.some(user => user.id === newConnectedUser.id);
+            
+            if (!userExists && newConnectedUser.id !== currentUser.id) {
+              console.log('Adding new user:', newConnectedUser);
               return {
                 ...prev,
                 connectedUsers: [...prev.connectedUsers, newConnectedUser]
@@ -103,6 +107,7 @@ export const ChatContainer = () => {
         })
         .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
           console.log('User left:', key, leftPresences);
+          
           setSelectedChannel(prev => {
             if (!prev || !prev.connectedUsers) return prev;
             
@@ -111,6 +116,8 @@ export const ChatContainer = () => {
               user.id === currentUser.id || 
               !leftPresences.some((presence: any) => presence.user_id === user.id)
             );
+            
+            console.log('Updated users after leave:', updatedUsers);
             
             return {
               ...prev,
@@ -121,11 +128,12 @@ export const ChatContainer = () => {
         .subscribe(async (status) => {
           if (status === 'SUBSCRIBED') {
             console.log('Channel subscribed, tracking presence...');
-            await channel.track({
+            const trackResult = await channel.track({
               user_id: currentUser.id,
               username: currentUser.username,
               online_at: new Date().toISOString(),
             });
+            console.log('Track result:', trackResult);
           }
         });
 
@@ -165,7 +173,7 @@ export const ChatContainer = () => {
     if (channel) {
       setSelectedChannel({
         ...channel,
-        connectedUsers: [currentUser]  // Always start with current user
+        connectedUsers: [currentUser]
       });
     } else {
       setSelectedChannel(null);
