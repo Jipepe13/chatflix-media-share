@@ -19,7 +19,7 @@ export const ChatContainer = () => {
     name: "général",
     createdAt: new Date(),
     createdBy: "system",
-    connectedUsers: []  // Initialize empty
+    connectedUsers: [currentUser]  // Initialize with current user
   });
 
   const [messages, setMessages] = useState<Message[]>([
@@ -52,15 +52,11 @@ export const ChatContainer = () => {
         .on('presence', { event: 'sync' }, () => {
           console.log('Presence sync:', channel.presenceState());
           
-          // Get all presences
-          const presences = channel.presenceState();
-          const connectedUsers: User[] = [];
+          // Always start with current user
+          const connectedUsers = [currentUser];
           
-          // First add current user
-          connectedUsers.push(currentUser);
-          
-          // Then add other users from presences
-          Object.values(presences)
+          // Add other users from presences
+          Object.values(channel.presenceState())
             .flat()
             .forEach((presence: any) => {
               if (presence.user_id !== currentUser.id) {
@@ -88,24 +84,21 @@ export const ChatContainer = () => {
             if (!prev || !prev.connectedUsers) return prev;
             
             const newUser = newPresences[0];
-            // Don't add if it's the current user
-            if (newUser.user_id === currentUser.id) return prev;
-            
-            // Don't add if user already exists
-            if (prev.connectedUsers.some(user => user.id === newUser.user_id)) {
-              return prev;
-            }
-            
             const newConnectedUser = {
               id: newUser.user_id,
               username: newUser.username,
               isOnline: true
             };
             
-            return {
-              ...prev,
-              connectedUsers: [...prev.connectedUsers, newConnectedUser]
-            };
+            // Don't add if it's the current user or if user already exists
+            if (newConnectedUser.id !== currentUser.id && 
+                !prev.connectedUsers.some(user => user.id === newConnectedUser.id)) {
+              return {
+                ...prev,
+                connectedUsers: [...prev.connectedUsers, newConnectedUser]
+              };
+            }
+            return prev;
           });
         })
         .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
@@ -172,7 +165,7 @@ export const ChatContainer = () => {
     if (channel) {
       setSelectedChannel({
         ...channel,
-        connectedUsers: []  // Start empty and let presence handle it
+        connectedUsers: [currentUser]  // Always start with current user
       });
     } else {
       setSelectedChannel(null);
