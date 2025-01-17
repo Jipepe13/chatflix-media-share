@@ -19,7 +19,7 @@ export const ChatContainer = () => {
     name: "général",
     createdAt: new Date(),
     createdBy: "system",
-    connectedUsers: [currentUser]
+    connectedUsers: []  // Initialize empty and let presence handle it
   });
 
   const [messages, setMessages] = useState<Message[]>([
@@ -53,7 +53,7 @@ export const ChatContainer = () => {
           console.log('Presence sync:', channel.presenceState());
           const presences = channel.presenceState();
           
-          // Always start with current user
+          // Initialize with current user
           const connectedUsers = [currentUser];
           
           // Add other users from presences
@@ -81,15 +81,17 @@ export const ChatContainer = () => {
         })
         .on('presence', { event: 'join' }, ({ key, newPresences }) => {
           console.log('User joined:', key, newPresences);
+          const newUser = newPresences[0];
+          const newConnectedUser = {
+            id: newUser.user_id,
+            username: newUser.username,
+            isOnline: true
+          };
+          
           setSelectedChannel(prev => {
             if (!prev || !prev.connectedUsers) return prev;
-            const newUser = newPresences[0];
-            const newConnectedUser = {
-              id: newUser.user_id,
-              username: newUser.username,
-              isOnline: true
-            };
             
+            // Don't add if it's the current user or if user already exists
             if (newConnectedUser.id !== currentUser.id && 
                 !prev.connectedUsers.some(user => user.id === newConnectedUser.id)) {
               return {
@@ -119,12 +121,11 @@ export const ChatContainer = () => {
         .subscribe(async (status) => {
           if (status === 'SUBSCRIBED') {
             console.log('Channel subscribed, tracking presence...');
-            const presenceTrackStatus = await channel.track({
+            await channel.track({
               user_id: currentUser.id,
               username: currentUser.username,
               online_at: new Date().toISOString(),
             });
-            console.log('Presence tracked:', presenceTrackStatus);
           }
         });
 
@@ -164,7 +165,7 @@ export const ChatContainer = () => {
     if (channel) {
       setSelectedChannel({
         ...channel,
-        connectedUsers: [currentUser]
+        connectedUsers: [currentUser]  // Initialize with current user
       });
     } else {
       setSelectedChannel(null);
