@@ -19,7 +19,7 @@ export const ChatContainer = () => {
     name: "général",
     createdAt: new Date(),
     createdBy: "system",
-    connectedUsers: [currentUser]
+    connectedUsers: []  // Initialize as empty array
   });
 
   const [messages, setMessages] = useState<Message[]>([
@@ -53,45 +53,41 @@ export const ChatContainer = () => {
         const state = channel.presenceState();
         console.log('Current presence state:', state);
         
-        // Get all presences as an array
-        const presences = Object.values(state).flat();
-        console.log('Flattened presences:', presences);
+        // Initialize with current user
+        const connectedUsers = [currentUser];
         
-        // Start with current user
-        const users = [currentUser];
-        
-        // Add other users from presences
-        presences.forEach((presence: any) => {
-          if (presence.user_id !== currentUser.id) {
-            const newUser = {
-              id: presence.user_id,
-              username: presence.username || 'Anonymous',
-              isOnline: true
-            };
-            console.log('Adding user from presence:', newUser);
-            users.push(newUser);
-          }
+        // Add other users from presence state
+        Object.values(state).forEach((presences: any) => {
+          presences.forEach((presence: any) => {
+            if (presence.user_id !== currentUser.id) {
+              connectedUsers.push({
+                id: presence.user_id,
+                username: presence.username || 'Anonymous',
+                isOnline: true
+              });
+            }
+          });
         });
         
-        console.log('Final users list:', users);
+        console.log('Updated connected users:', connectedUsers);
         
         setSelectedChannel(prev => {
           if (!prev) return null;
           return {
             ...prev,
-            connectedUsers: users
+            connectedUsers
           };
         });
       };
 
       channel
         .on('presence', { event: 'sync' }, handlePresenceSync)
-        .on('presence', { event: 'join' }, ({ key, newPresences }) => {
-          console.log('Join event:', { key, newPresences });
+        .on('presence', { event: 'join' }, () => {
+          console.log('Join event received');
           handlePresenceSync();
         })
-        .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
-          console.log('Leave event:', { key, leftPresences });
+        .on('presence', { event: 'leave' }, () => {
+          console.log('Leave event received');
           handlePresenceSync();
         })
         .subscribe(async (status) => {
@@ -99,12 +95,18 @@ export const ChatContainer = () => {
           
           if (status === 'SUBSCRIBED') {
             console.log('Tracking presence for current user:', currentUser);
-            const trackResult = await channel.track({
-              user_id: currentUser.id,
-              username: currentUser.username,
-              online_at: new Date().toISOString(),
-            });
-            console.log('Track result:', trackResult);
+            try {
+              const presenceData = {
+                user_id: currentUser.id,
+                username: currentUser.username,
+                online_at: new Date().toISOString(),
+              };
+              console.log('Presence data to track:', presenceData);
+              const trackResult = await channel.track(presenceData);
+              console.log('Track result:', trackResult);
+            } catch (error) {
+              console.error('Error tracking presence:', error);
+            }
           }
         });
 
@@ -144,7 +146,7 @@ export const ChatContainer = () => {
     if (channel) {
       setSelectedChannel({
         ...channel,
-        connectedUsers: [currentUser]
+        connectedUsers: [] // Initialize as empty array
       });
     } else {
       setSelectedChannel(null);
