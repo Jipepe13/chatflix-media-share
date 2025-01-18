@@ -19,7 +19,7 @@ export const ChatContainer = () => {
     name: "général",
     createdAt: new Date(),
     createdBy: "system",
-    connectedUsers: [currentUser]  // Initialize with current user
+    connectedUsers: [currentUser]
   });
 
   const [messages, setMessages] = useState<Message[]>([
@@ -48,86 +48,57 @@ export const ChatContainer = () => {
         },
       });
 
-      channel
-        .on('presence', { event: 'sync' }, () => {
-          console.log('Presence sync:', channel.presenceState());
-          
-          const presences = Object.values(channel.presenceState()).flat();
-          console.log('Raw presences:', presences);
-          
-          // Initialize with current user
-          const users = [currentUser];
-          
-          // Add other users from presences
-          presences.forEach((presence: any) => {
-            if (presence.user_id !== currentUser.id) {
-              users.push({
-                id: presence.user_id,
-                username: presence.username,
-                isOnline: true
-              });
-            }
-          });
-          
-          console.log('Final connected users:', users);
-          
-          setSelectedChannel(prev => {
-            if (!prev) return null;
-            return {
-              ...prev,
-              connectedUsers: users
-            };
-          });
-        })
-        .on('presence', { event: 'join' }, ({ key, newPresences }) => {
-          console.log('User joined:', key, newPresences);
-          
-          setSelectedChannel(prev => {
-            if (!prev || !prev.connectedUsers) return prev;
-            
-            const newUser = newPresences[0];
-            const newConnectedUser = {
-              id: newUser.user_id,
-              username: newUser.username,
+      const handlePresenceSync = () => {
+        console.log('Presence sync event triggered');
+        const state = channel.presenceState();
+        console.log('Current presence state:', state);
+        
+        // Get all presences as an array
+        const presences = Object.values(state).flat();
+        console.log('Flattened presences:', presences);
+        
+        // Start with current user
+        const users = [currentUser];
+        
+        // Add other users from presences
+        presences.forEach((presence: any) => {
+          if (presence.user_id !== currentUser.id) {
+            const newUser = {
+              id: presence.user_id,
+              username: presence.username || 'Anonymous',
               isOnline: true
             };
-            
-            // Check if user already exists
-            const userExists = prev.connectedUsers.some(user => user.id === newConnectedUser.id);
-            
-            if (!userExists && newConnectedUser.id !== currentUser.id) {
-              console.log('Adding new user:', newConnectedUser);
-              return {
-                ...prev,
-                connectedUsers: [...prev.connectedUsers, newConnectedUser]
-              };
-            }
-            return prev;
-          });
+            console.log('Adding user from presence:', newUser);
+            users.push(newUser);
+          }
+        });
+        
+        console.log('Final users list:', users);
+        
+        setSelectedChannel(prev => {
+          if (!prev) return null;
+          return {
+            ...prev,
+            connectedUsers: users
+          };
+        });
+      };
+
+      channel
+        .on('presence', { event: 'sync' }, handlePresenceSync)
+        .on('presence', { event: 'join' }, ({ key, newPresences }) => {
+          console.log('Join event:', { key, newPresences });
+          handlePresenceSync();
         })
         .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
-          console.log('User left:', key, leftPresences);
-          
-          setSelectedChannel(prev => {
-            if (!prev || !prev.connectedUsers) return prev;
-            
-            // Keep current user and remove others that left
-            const updatedUsers = prev.connectedUsers.filter(user => 
-              user.id === currentUser.id || 
-              !leftPresences.some((presence: any) => presence.user_id === user.id)
-            );
-            
-            console.log('Updated users after leave:', updatedUsers);
-            
-            return {
-              ...prev,
-              connectedUsers: updatedUsers
-            };
-          });
+          console.log('Leave event:', { key, leftPresences });
+          handlePresenceSync();
         })
         .subscribe(async (status) => {
+          console.log('Channel subscription status:', status);
+          
           if (status === 'SUBSCRIBED') {
-            console.log('Channel subscribed, tracking presence...');
+            console.log('Tracking presence for current user:', currentUser);
             const trackResult = await channel.track({
               user_id: currentUser.id,
               username: currentUser.username,
@@ -173,7 +144,7 @@ export const ChatContainer = () => {
     if (channel) {
       setSelectedChannel({
         ...channel,
-        connectedUsers: [currentUser]  // Initialize with current user
+        connectedUsers: [currentUser]
       });
     } else {
       setSelectedChannel(null);
