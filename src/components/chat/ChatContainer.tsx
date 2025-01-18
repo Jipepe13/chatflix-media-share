@@ -19,7 +19,7 @@ export const ChatContainer = () => {
     name: "général",
     createdAt: new Date(),
     createdBy: "system",
-    connectedUsers: []  // Initialize empty, will be populated after subscription
+    connectedUsers: [currentUser]  // Initialize with current user
   });
 
   const [messages, setMessages] = useState<Message[]>([
@@ -55,12 +55,10 @@ export const ChatContainer = () => {
           const presences = Object.values(channel.presenceState()).flat();
           console.log('Raw presences:', presences);
           
-          const users: User[] = [];
+          // Initialize with current user
+          const users = [currentUser];
           
-          // Always add current user first
-          users.push(currentUser);
-          
-          // Then add other users from presences
+          // Add other users from presences
           presences.forEach((presence: any) => {
             if (presence.user_id !== currentUser.id) {
               users.push({
@@ -175,7 +173,7 @@ export const ChatContainer = () => {
     if (channel) {
       setSelectedChannel({
         ...channel,
-        connectedUsers: []  // Initialize empty, will be populated after subscription
+        connectedUsers: [currentUser]  // Initialize with current user
       });
     } else {
       setSelectedChannel(null);
