@@ -5,7 +5,7 @@ import { MessageList } from "./MessageList";
 import { MessageInput } from "./MessageInput";
 import { VideoCall } from "./VideoCall";
 import { supabase } from "@/integrations/supabase/client";
-import { RealtimeChannelStatus } from "@supabase/supabase-js";
+import { REALTIME_CHANNEL_STATES } from "@supabase/supabase-js";
 
 export const ChatContainer = () => {
   const currentUser: User = {
@@ -87,7 +87,7 @@ export const ChatContainer = () => {
           const status = await channel.subscribe();
           console.log('Channel subscription status:', status);
           
-          if (status === RealtimeChannelStatus.SUBSCRIBED) {
+          if (status === REALTIME_CHANNEL_STATES.SUBSCRIBED) {
             // Then track presence
             console.log('Tracking presence for current user:', currentUser);
             const presenceData = {
