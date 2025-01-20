@@ -19,7 +19,7 @@ export const ChatContainer = () => {
     name: "général",
     createdAt: new Date(),
     createdBy: "system",
-    connectedUsers: []  // Initialize as empty array
+    connectedUsers: [currentUser]  // Initialize with current user
   });
 
   const [messages, setMessages] = useState<Message[]>([
@@ -53,7 +53,7 @@ export const ChatContainer = () => {
         const state = channel.presenceState();
         console.log('Current presence state:', state);
         
-        // Initialize with current user
+        // Always include current user first
         const connectedUsers = [currentUser];
         
         // Add other users from presence state
@@ -80,6 +80,29 @@ export const ChatContainer = () => {
         });
       };
 
+      const setupPresence = async () => {
+        try {
+          // Subscribe to the channel first
+          const status = await channel.subscribe();
+          console.log('Channel subscription status:', status);
+          
+          if (status === 'SUBSCRIBED') {
+            // Then track presence
+            console.log('Tracking presence for current user:', currentUser);
+            const presenceData = {
+              user_id: currentUser.id,
+              username: currentUser.username,
+              online_at: new Date().toISOString(),
+            };
+            console.log('Presence data to track:', presenceData);
+            await channel.track(presenceData);
+          }
+        } catch (error) {
+          console.error('Error in presence setup:', error);
+        }
+      };
+
+      // Set up presence handlers
       channel
         .on('presence', { event: 'sync' }, handlePresenceSync)
         .on('presence', { event: 'join' }, () => {
@@ -89,26 +112,10 @@ export const ChatContainer = () => {
         .on('presence', { event: 'leave' }, () => {
           console.log('Leave event received');
           handlePresenceSync();
-        })
-        .subscribe(async (status) => {
-          console.log('Channel subscription status:', status);
-          
-          if (status === 'SUBSCRIBED') {
-            console.log('Tracking presence for current user:', currentUser);
-            try {
-              const presenceData = {
-                user_id: currentUser.id,
-                username: currentUser.username,
-                online_at: new Date().toISOString(),
-              };
-              console.log('Presence data to track:', presenceData);
-              const trackResult = await channel.track(presenceData);
-              console.log('Track result:', trackResult);
-            } catch (error) {
-              console.error('Error tracking presence:', error);
-            }
-          }
         });
+
+      // Initialize presence
+      setupPresence();
 
       return () => {
         console.log('Cleaning up channel subscription');
@@ -146,7 +153,7 @@ export const ChatContainer = () => {
     if (channel) {
       setSelectedChannel({
         ...channel,
-        connectedUsers: [] // Initialize as empty array
+        connectedUsers: [currentUser] // Initialize with current user
       });
     } else {
       setSelectedChannel(null);
