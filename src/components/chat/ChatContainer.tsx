@@ -84,20 +84,21 @@ export const ChatContainer = () => {
       const setupPresence = async () => {
         try {
           // Subscribe to the channel first
-          const status = await channel.subscribe();
-          console.log('Channel subscription status:', status);
-          
-          if (status === 'SUBSCRIBED') {
-            // Then track presence
-            console.log('Tracking presence for current user:', currentUser);
-            const presenceData = {
-              user_id: currentUser.id,
-              username: currentUser.username,
-              online_at: new Date().toISOString(),
-            };
-            console.log('Presence data to track:', presenceData);
-            await channel.track(presenceData);
-          }
+          await channel.subscribe((status) => {
+            console.log('Channel subscription status:', status);
+            
+            if (status === 'SUBSCRIBED') {
+              // Then track presence
+              console.log('Tracking presence for current user:', currentUser);
+              const presenceData = {
+                user_id: currentUser.id,
+                username: currentUser.username,
+                online_at: new Date().toISOString(),
+              };
+              console.log('Presence data to track:', presenceData);
+              channel.track(presenceData);
+            }
+          });
         } catch (error) {
           console.error('Error in presence setup:', error);
         }
