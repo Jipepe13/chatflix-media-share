@@ -5,7 +5,6 @@ import { MessageList } from "./MessageList";
 import { MessageInput } from "./MessageInput";
 import { VideoCall } from "./VideoCall";
 import { supabase } from "@/integrations/supabase/client";
-import { REALTIME_CHANNEL_STATES } from "@supabase/supabase-js";
 
 export const ChatContainer = () => {
   const currentUser: User = {
@@ -20,7 +19,7 @@ export const ChatContainer = () => {
     name: "général",
     createdAt: new Date(),
     createdBy: "system",
-    connectedUsers: [currentUser]  // Initialize with current user
+    connectedUsers: [currentUser]
   });
 
   const [messages, setMessages] = useState<Message[]>([
@@ -81,29 +80,6 @@ export const ChatContainer = () => {
         });
       };
 
-      const setupPresence = async () => {
-        try {
-          // Subscribe to the channel first
-          await channel.subscribe((status) => {
-            console.log('Channel subscription status:', status);
-            
-            if (status === 'SUBSCRIBED') {
-              // Then track presence
-              console.log('Tracking presence for current user:', currentUser);
-              const presenceData = {
-                user_id: currentUser.id,
-                username: currentUser.username,
-                online_at: new Date().toISOString(),
-              };
-              console.log('Presence data to track:', presenceData);
-              channel.track(presenceData);
-            }
-          });
-        } catch (error) {
-          console.error('Error in presence setup:', error);
-        }
-      };
-
       // Set up presence handlers
       channel
         .on('presence', { event: 'sync' }, handlePresenceSync)
@@ -116,8 +92,18 @@ export const ChatContainer = () => {
           handlePresenceSync();
         });
 
-      // Initialize presence
-      setupPresence();
+      // Subscribe and track presence
+      channel.subscribe(async (status) => {
+        if (status === 'SUBSCRIBED') {
+          console.log('Channel subscription successful');
+          const presenceData = {
+            user_id: currentUser.id,
+            username: currentUser.username,
+            online_at: new Date().toISOString(),
+          };
+          await channel.track(presenceData);
+        }
+      });
 
       return () => {
         console.log('Cleaning up channel subscription');
@@ -155,7 +141,7 @@ export const ChatContainer = () => {
     if (channel) {
       setSelectedChannel({
         ...channel,
-        connectedUsers: [currentUser] // Initialize with current user
+        connectedUsers: [currentUser]
       });
     } else {
       setSelectedChannel(null);
