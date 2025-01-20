@@ -5,6 +5,7 @@ import { MessageList } from "./MessageList";
 import { MessageInput } from "./MessageInput";
 import { VideoCall } from "./VideoCall";
 import { supabase } from "@/integrations/supabase/client";
+import { RealtimeChannel } from "@supabase/supabase-js";
 
 export const ChatContainer = () => {
   const currentUser: User = {
@@ -35,88 +36,110 @@ export const ChatContainer = () => {
 
   const [isVideoCallActive, setIsVideoCallActive] = useState(false);
   const [newMessage, setNewMessage] = useState("");
+  const [channel, setChannel] = useState<RealtimeChannel | null>(null);
 
   useEffect(() => {
-    if (selectedChannel) {
-      console.log("Initializing channel presence for:", selectedChannel.name);
-      
-      const channel = supabase.channel(`room_${selectedChannel.id}`, {
-        config: {
-          presence: {
-            key: currentUser.id,
-          },
-        },
-      });
+    let currentChannel: RealtimeChannel | null = null;
 
-      const handlePresenceSync = () => {
-        console.log('Presence sync event triggered');
-        const state = channel.presenceState();
-        console.log('Current presence state:', state);
+    const setupChannel = async () => {
+      if (selectedChannel) {
+        console.log("Initializing channel presence for:", selectedChannel.name);
         
-        // Always include current user first
-        const connectedUsers = [currentUser];
-        
-        // Add other users from presence state
-        Object.values(state).forEach((presences: any) => {
-          presences.forEach((presence: any) => {
-            if (presence.user_id !== currentUser.id) {
-              connectedUsers.push({
-                id: presence.user_id,
-                username: presence.username || 'Anonymous',
-                isOnline: true
-              });
-            }
-          });
-        });
-        
-        console.log('Updated connected users:', connectedUsers);
-        
-        setSelectedChannel(prev => {
-          if (!prev) return null;
-          return {
-            ...prev,
-            connectedUsers
-          };
-        });
-      };
-
-      // Set up presence handlers
-      channel
-        .on('presence', { event: 'sync' }, handlePresenceSync)
-        .on('presence', { event: 'join' }, () => {
-          console.log('Join event received');
-          handlePresenceSync();
-        })
-        .on('presence', { event: 'leave' }, () => {
-          console.log('Leave event received');
-          handlePresenceSync();
-        });
-
-      // Subscribe and track presence
-      channel.subscribe(async (status: 'SUBSCRIBED' | 'TIMED_OUT' | 'CLOSED' | 'CHANNEL_ERROR') => {
-        if (status === 'SUBSCRIBED') {
-          console.log('Channel subscription successful');
-          const presenceData = {
-            user_id: currentUser.id,
-            username: currentUser.username,
-            online_at: new Date().toISOString(),
-          };
-          try {
-            await channel.track(presenceData);
-            console.log('Presence tracked successfully');
-          } catch (error) {
-            console.error('Error tracking presence:', error);
-          }
-        } else {
-          console.log('Channel subscription status:', status);
+        // Cleanup previous channel if exists
+        if (currentChannel) {
+          console.log("Cleaning up previous channel");
+          await currentChannel.unsubscribe();
         }
-      });
 
-      return () => {
-        console.log('Cleaning up channel subscription');
-        channel.unsubscribe();
-      };
-    }
+        // Create new channel
+        currentChannel = supabase.channel(`room_${selectedChannel.id}`, {
+          config: {
+            presence: {
+              key: currentUser.id,
+            },
+          },
+        });
+
+        const handlePresenceSync = () => {
+          console.log('Presence sync event triggered');
+          const state = currentChannel?.presenceState() || {};
+          console.log('Current presence state:', state);
+          
+          // Always include current user first
+          const connectedUsers = [currentUser];
+          
+          // Add other users from presence state
+          Object.values(state).forEach((presences: any) => {
+            presences.forEach((presence: any) => {
+              if (presence.user_id !== currentUser.id) {
+                connectedUsers.push({
+                  id: presence.user_id,
+                  username: presence.username || 'Anonymous',
+                  isOnline: true
+                });
+              }
+            });
+          });
+          
+          console.log('Updated connected users:', connectedUsers);
+          
+          setSelectedChannel(prev => {
+            if (!prev) return null;
+            return {
+              ...prev,
+              connectedUsers
+            };
+          });
+        };
+
+        // Set up presence handlers
+        currentChannel
+          .on('presence', { event: 'sync' }, handlePresenceSync)
+          .on('presence', { event: 'join' }, () => {
+            console.log('Join event received');
+            handlePresenceSync();
+          })
+          .on('presence', { event: 'leave' }, () => {
+            console.log('Leave event received');
+            handlePresenceSync();
+          });
+
+        // Subscribe and track presence
+        try {
+          const status = await currentChannel.subscribe();
+          console.log("Channel subscription status:", status);
+
+          if (status === "SUBSCRIBED") {
+            console.log("Channel successfully subscribed, tracking presence");
+            const presenceData = {
+              user_id: currentUser.id,
+              username: currentUser.username,
+              online_at: new Date().toISOString(),
+            };
+
+            try {
+              await currentChannel.track(presenceData);
+              console.log("Presence tracked successfully");
+              setChannel(currentChannel);
+            } catch (error) {
+              console.error("Error tracking presence:", error);
+            }
+          }
+        } catch (error) {
+          console.error("Error subscribing to channel:", error);
+        }
+      }
+    };
+
+    setupChannel();
+
+    // Cleanup function
+    return () => {
+      if (currentChannel) {
+        console.log("Cleaning up channel subscription");
+        currentChannel.unsubscribe();
+      }
+    };
   }, [selectedChannel?.id]);
 
   const handleSendMessage = (content: string) => {
