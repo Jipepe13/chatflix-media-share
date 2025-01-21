@@ -5,7 +5,7 @@ import { MessageList } from "./MessageList";
 import { MessageInput } from "./MessageInput";
 import { VideoCall } from "./VideoCall";
 import { supabase } from "@/integrations/supabase/client";
-import { RealtimeChannel, REALTIME_CHANNEL_STATES } from "@supabase/supabase-js";
+import { RealtimeChannel } from "@supabase/supabase-js";
 
 export const ChatContainer = () => {
   const currentUser: User = {
@@ -98,25 +98,27 @@ export const ChatContainer = () => {
           });
 
         try {
-          const status = await currentChannel.subscribe();
-          console.log("Channel subscription status:", status);
+          await currentChannel.subscribe((status) => {
+            console.log("Channel subscription status:", status);
+            
+            if (status === "SUBSCRIBED") {
+              console.log("Channel successfully subscribed, tracking presence");
+              const presenceData = {
+                user_id: currentUser.id,
+                username: currentUser.username,
+                online_at: new Date().toISOString(),
+              };
 
-          if (status === 'SUBSCRIBED') {
-            console.log("Channel successfully subscribed, tracking presence");
-            const presenceData = {
-              user_id: currentUser.id,
-              username: currentUser.username,
-              online_at: new Date().toISOString(),
-            };
-
-            try {
-              await currentChannel.track(presenceData);
-              console.log("Presence tracked successfully");
-              setChannel(currentChannel);
-            } catch (error) {
-              console.error("Error tracking presence:", error);
+              currentChannel?.track(presenceData)
+                .then(() => {
+                  console.log("Presence tracked successfully");
+                  setChannel(currentChannel);
+                })
+                .catch((error) => {
+                  console.error("Error tracking presence:", error);
+                });
             }
-          }
+          });
         } catch (error) {
           console.error("Error subscribing to channel:", error);
         }
