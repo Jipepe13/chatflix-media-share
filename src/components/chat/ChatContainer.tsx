@@ -101,7 +101,7 @@ export const ChatContainer = () => {
           const status = await currentChannel.subscribe();
           console.log("Channel subscription status:", status);
 
-          if (status === REALTIME_CHANNEL_STATES.SUBSCRIBED) {
+          if (status === 'SUBSCRIBED') {
             console.log("Channel successfully subscribed, tracking presence");
             const presenceData = {
               user_id: currentUser.id,
