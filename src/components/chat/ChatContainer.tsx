@@ -45,13 +45,11 @@ export const ChatContainer = () => {
       if (selectedChannel) {
         console.log("Initializing channel presence for:", selectedChannel.name);
         
-        // Cleanup previous channel if exists
         if (currentChannel) {
           console.log("Cleaning up previous channel");
           await currentChannel.unsubscribe();
         }
 
-        // Create new channel
         currentChannel = supabase.channel(`room_${selectedChannel.id}`, {
           config: {
             presence: {
@@ -65,34 +63,29 @@ export const ChatContainer = () => {
           const state = currentChannel?.presenceState() || {};
           console.log('Current presence state:', state);
           
-          // Always include current user first
-          const connectedUsers = [currentUser];
+          const connectedUsers: User[] = [currentUser];
           
-          // Add other users from presence state
-          Object.values(state).forEach((presences: any) => {
-            presences.forEach((presence: any) => {
-              if (presence.user_id !== currentUser.id) {
+          Object.entries(state).forEach(([userId, presences]) => {
+            if (Array.isArray(presences) && presences.length > 0) {
+              const presence = presences[0] as any;
+              if (userId !== currentUser.id) {
                 connectedUsers.push({
-                  id: presence.user_id,
+                  id: userId,
                   username: presence.username || 'Anonymous',
                   isOnline: true
                 });
               }
-            });
+            }
           });
           
           console.log('Updated connected users:', connectedUsers);
           
-          setSelectedChannel(prev => {
-            if (!prev) return null;
-            return {
-              ...prev,
-              connectedUsers
-            };
-          });
+          setSelectedChannel(prev => prev ? {
+            ...prev,
+            connectedUsers
+          } : null);
         };
 
-        // Set up presence handlers
         currentChannel
           .on('presence', { event: 'sync' }, handlePresenceSync)
           .on('presence', { event: 'join' }, () => {
@@ -105,26 +98,25 @@ export const ChatContainer = () => {
           });
 
         try {
-          const subscription = await currentChannel.subscribe(async (status: string) => {
-            console.log("Channel subscription status:", status);
+          const status = await currentChannel.subscribe();
+          console.log("Channel subscription status:", status);
 
-            if (status === 'SUBSCRIBED') {
-              console.log("Channel successfully subscribed, tracking presence");
-              const presenceData = {
-                user_id: currentUser.id,
-                username: currentUser.username,
-                online_at: new Date().toISOString(),
-              };
+          if (status === 'SUBSCRIBED') {
+            console.log("Channel successfully subscribed, tracking presence");
+            const presenceData = {
+              user_id: currentUser.id,
+              username: currentUser.username,
+              online_at: new Date().toISOString(),
+            };
 
-              try {
-                await currentChannel?.track(presenceData);
-                console.log("Presence tracked successfully");
-                setChannel(currentChannel);
-              } catch (error) {
-                console.error("Error tracking presence:", error);
-              }
+            try {
+              await currentChannel.track(presenceData);
+              console.log("Presence tracked successfully");
+              setChannel(currentChannel);
+            } catch (error) {
+              console.error("Error tracking presence:", error);
             }
-          });
+          }
         } catch (error) {
           console.error("Error subscribing to channel:", error);
         }
@@ -133,7 +125,6 @@ export const ChatContainer = () => {
 
     setupChannel();
 
-    // Cleanup function
     return () => {
       if (currentChannel) {
         console.log("Cleaning up channel subscription");
