@@ -1,11 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Message, User, Channel } from "@/types/chat";
 import { ChatSidebar } from "./ChatSidebar";
-import { MessageList } from "./MessageList";
-import { MessageInput } from "./MessageInput";
-import { VideoCall } from "./VideoCall";
-import { supabase } from "@/integrations/supabase/client";
-import { RealtimeChannel } from "@supabase/supabase-js";
+import { ChatMainSection } from "./ChatMainSection";
+import { ChatVideoSection } from "./ChatVideoSection";
+import { useChannelPresence } from "@/hooks/useChannelPresence";
 
 export const ChatContainer = () => {
   const currentUser: User = {
@@ -36,104 +34,9 @@ export const ChatContainer = () => {
 
   const [isVideoCallActive, setIsVideoCallActive] = useState(false);
   const [newMessage, setNewMessage] = useState("");
-  const [channel, setChannel] = useState<RealtimeChannel | null>(null);
 
-  useEffect(() => {
-    let currentChannel: RealtimeChannel | null = null;
-
-    const setupChannel = async () => {
-      if (selectedChannel) {
-        console.log("Initializing channel presence for:", selectedChannel.name);
-        
-        if (currentChannel) {
-          console.log("Cleaning up previous channel");
-          await currentChannel.unsubscribe();
-        }
-
-        currentChannel = supabase.channel(`room_${selectedChannel.id}`, {
-          config: {
-            presence: {
-              key: currentUser.id,
-            },
-          },
-        });
-
-        const handlePresenceSync = () => {
-          console.log('Presence sync event triggered');
-          const state = currentChannel?.presenceState() || {};
-          console.log('Current presence state:', state);
-          
-          const connectedUsers: User[] = [currentUser];
-          
-          Object.entries(state).forEach(([userId, presences]) => {
-            if (Array.isArray(presences) && presences.length > 0) {
-              const presence = presences[0] as any;
-              if (userId !== currentUser.id) {
-                connectedUsers.push({
-                  id: userId,
-                  username: presence.username || 'Anonymous',
-                  isOnline: true
-                });
-              }
-            }
-          });
-          
-          console.log('Updated connected users:', connectedUsers);
-          
-          setSelectedChannel(prev => prev ? {
-            ...prev,
-            connectedUsers
-          } : null);
-        };
-
-        currentChannel
-          .on('presence', { event: 'sync' }, handlePresenceSync)
-          .on('presence', { event: 'join' }, () => {
-            console.log('Join event received');
-            handlePresenceSync();
-          })
-          .on('presence', { event: 'leave' }, () => {
-            console.log('Leave event received');
-            handlePresenceSync();
-          });
-
-        try {
-          await currentChannel.subscribe((status: string) => {
-            console.log("Channel subscription status:", status);
-            
-            if (status === "SUBSCRIBED") {
-              console.log("Channel successfully subscribed, tracking presence");
-              const presenceData = {
-                user_id: currentUser.id,
-                username: currentUser.username,
-                online_at: new Date().toISOString(),
-              };
-
-              currentChannel?.track(presenceData)
-                .then(() => {
-                  console.log("Presence tracked successfully");
-                  setChannel(currentChannel);
-                })
-                .catch((error) => {
-                  console.error("Error tracking presence:", error);
-                });
-            }
-          });
-        } catch (error) {
-          console.error("Error subscribing to channel:", error);
-        }
-      }
-    };
-
-    setupChannel();
-
-    return () => {
-      if (currentChannel) {
-        console.log("Cleaning up channel subscription");
-        currentChannel.unsubscribe();
-      }
-    };
-  }, [selectedChannel?.id]);
+  // Utilise le hook personnalisé pour gérer la présence
+  const channel = useChannelPresence(selectedChannel, currentUser);
 
   const handleSendMessage = (content: string) => {
     const newMessage: Message = {
@@ -188,8 +91,8 @@ export const ChatContainer = () => {
 
   return (
     <div className="flex h-[calc(100vh-4rem)]">
-      <ChatSidebar 
-        currentUser={currentUser} 
+      <ChatSidebar
+        currentUser={currentUser}
         onStartVideoCall={handleStartVideoCall}
         selectedUser={selectedUser}
         onSelectUser={handleSelectUser}
@@ -197,16 +100,13 @@ export const ChatContainer = () => {
         onSelectChannel={handleSelectChannel}
       />
       <div className="flex-1 flex flex-col">
-        {isVideoCallActive && (
-          <VideoCall 
-            isInitiator={true}
-            userId="other-user"
-            onClose={handleEndVideoCall}
-            onEndCall={handleEndVideoCall}
-          />
-        )}
-        <MessageList messages={messages} currentUser={currentUser} />
-        <MessageInput 
+        <ChatVideoSection
+          isVideoCallActive={isVideoCallActive}
+          onEndVideoCall={handleEndVideoCall}
+        />
+        <ChatMainSection
+          messages={messages}
+          currentUser={currentUser}
           newMessage={newMessage}
           setNewMessage={setNewMessage}
           handleSendMessage={(e) => {
