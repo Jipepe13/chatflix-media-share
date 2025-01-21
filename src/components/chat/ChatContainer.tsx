@@ -104,9 +104,8 @@ export const ChatContainer = () => {
             handlePresenceSync();
           });
 
-        // Subscribe and track presence
         try {
-          await currentChannel.subscribe((status: string) => {
+          const subscription = await currentChannel.subscribe(async (status: string) => {
             console.log("Channel subscription status:", status);
 
             if (status === 'SUBSCRIBED') {
@@ -117,14 +116,13 @@ export const ChatContainer = () => {
                 online_at: new Date().toISOString(),
               };
 
-              currentChannel?.track(presenceData)
-                .then(() => {
-                  console.log("Presence tracked successfully");
-                  setChannel(currentChannel);
-                })
-                .catch((error) => {
-                  console.error("Error tracking presence:", error);
-                });
+              try {
+                await currentChannel?.track(presenceData);
+                console.log("Presence tracked successfully");
+                setChannel(currentChannel);
+              } catch (error) {
+                console.error("Error tracking presence:", error);
+              }
             }
           });
         } catch (error) {
